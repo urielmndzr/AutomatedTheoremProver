@@ -1,0 +1,171 @@
+options{
+    STATIC = false;
+    LOOKAHEAD = 2;
+}
+
+PARSER_BEGIN(Analizador)
+public class Analizador{
+    
+    public static void main(String[] args){
+        Analizador analizador = new Analizador(System.in);
+
+        try{
+            System.out.println("Iniciando análisis...\n");
+            analizador.inicializarArbol();
+            System.out.println("Análisis exitoso");
+        }catch(ParseException e){
+            System.out.println("Error de sintaxis: " + e.getMessage());
+        }
+    }
+
+    class Nodo {
+        Token token;
+        Nodo izquierdo, derecho;
+
+        public Nodo(Token token){
+            this.token = token;
+            this.izquierdo = null;
+            this.derecho = null;
+        }
+    }
+
+    class Arbol{
+        Nodo raiz;
+
+        public Arbol(){
+            raiz = null;
+        }
+
+        public Arbol(Nodo raiz){
+            this.raiz = raiz;
+        }
+
+        void enOrden(){
+            System.out.print("\nRecorrido in-orden: ");
+            enOrdenRec(raiz);
+            System.out.println("\n");
+        }
+
+        void enOrdenRec(Nodo raiz){
+            if (raiz != null) {
+                enOrdenRec(raiz.izquierdo);
+                System.out.print(raiz.token.image + " ");
+                enOrdenRec(raiz.derecho);
+            }
+        }
+
+        public void insertar(Arbol arbolIzq, Arbol arbolDer, Nodo operador){
+            operador.izquierdo = arbolIzq.raiz;
+            operador.derecho = arbolDer.raiz;
+            this.raiz = operador;
+        }
+
+        public Nodo getRaiz(){
+            return raiz;
+        }
+
+        public void setRaiz(Nodo raiz){
+            this.raiz = raiz;
+        }
+    }
+}
+
+PARSER_END(Analizador)
+
+TOKEN:{
+    <BICONDICIONAL: "=">{System.out.println("BICONDICIONAL: " + image);}
+    | <CONDICIONAL: ">">{System.out.println("CONDICIONAL: " + image);}
+    | <DISYUNCION: "|">{System.out.println("DISYUNCION: " + image);}
+    | <CONJUNCION: "&">{System.out.println("CONJUNCION: " + image);}
+    | <NEGACION: "¬">{System.out.println("NEGACION: " + image);}
+    | <VARIABLE: (["A"-"Z"])+>{System.out.println("VARIABLE: " + image);}
+}
+
+TOKEN:{
+    <PARENTESIS_IZQ: "(">{System.out.println("PARENTESIS_IZQ: " + image);}
+    | <PARENTESIS_DER: ")">{System.out.println("PARENTESIS_DER: " + image);}
+    | <CORCHETE_IZQ: "[">{System.out.println("CORCHETE_IZQ: " + image);}
+    | <CORCHETE_DER: "]">{System.out.println("CORCHETE_DER: " + image);}
+    | <LLAVE_IZQ: "{">{System.out.println("LLAVE_IZQ: " + image);}
+    | <LLAVE_DER: "}">{System.out.println("LLAVE_DER: " + image);}
+}
+
+SKIP:{
+    " " | "\t" | "\n" | "\r" | "\r\n"
+}
+
+TOKEN:{
+    <FORMULAVALIDA: "1">
+    | <CONTRADICCION: "0">
+}
+
+void inicializarArbol():{
+    Arbol arbol;
+}{
+    arbol = condicionales(){System.out.println("Fin"); arbol.enOrden(); }
+}
+
+Arbol condicionales():{
+    Arbol arbolIzq, arbolDer;
+    Token t;
+}{
+    arbolIzq = operacionesLogicas()( 
+         <CONDICIONAL>   {t = token;} arbolDer = operacionesLogicas() { arbolIzq.insertar(arbolIzq, arbolDer, new Nodo(t)); }
+        |<BICONDICIONAL> {t = token;} arbolDer = operacionesLogicas() { arbolIzq.insertar(arbolIzq, arbolDer, new Nodo(t)); })*
+        {return arbolIzq;}
+}
+
+Arbol operacionesLogicas():{
+    Arbol arbolIzq, arbolDer;
+    Token t;
+}{
+    arbolIzq = procesarNegacion()(
+         <CONJUNCION> {t = token;} arbolDer = procesarNegacion() { arbolIzq.insertar(arbolIzq, arbolDer, new Nodo(t)); }
+        |<DISYUNCION> {t = token;} arbolDer = procesarNegacion() { arbolIzq.insertar(arbolIzq, arbolDer, new Nodo(t)); })*
+        {return arbolIzq;}
+}
+
+Arbol procesarNegacion():{
+    Arbol arbolIzq = new Arbol(); 
+    Arbol arbolDer;
+}{
+    ((<NEGACION>{
+        if(arbolIzq.raiz == null){
+            arbolIzq.setRaiz(new Nodo(token));
+        }else{
+            Nodo actual = arbolIzq.raiz;
+            while(actual.derecho != null){
+                actual = actual.derecho;
+            }
+            actual.derecho = new Nodo(token);
+        }
+    } arbolDer = procesarNegacion())
+    | arbolDer = procesarVariable()
+    ){
+        if(arbolIzq.raiz == null){
+            arbolIzq.setRaiz(arbolDer.raiz);
+        }
+        else{
+            Nodo actual = arbolIzq.raiz;
+            while(actual.derecho != null){
+                actual = actual.derecho;
+            }
+            actual.derecho = arbolDer.raiz;
+        }
+        return arbolIzq;
+    }
+}
+
+Arbol procesarVariable():{
+    Arbol arbol;
+}{
+    (<VARIABLE>{ arbol = new Arbol(new Nodo(token)); } | arbol = procesarAgrupaciones()){ return arbol; }
+}
+
+Arbol procesarAgrupaciones():{
+    Arbol arbol;
+}{
+      <PARENTESIS_IZQ> arbol = condicionales() <PARENTESIS_DER>{ return arbol; }
+    | <CORCHETE_IZQ>   arbol = condicionales() <CORCHETE_DER>{ return arbol; }
+    | <LLAVE_IZQ>      arbol = condicionales() <LLAVE_DER>{ return arbol; }
+}
