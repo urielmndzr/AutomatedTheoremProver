@@ -64,10 +64,126 @@ public class Analizador implements AnalizadorConstants {
         }
     }
 
+    class ConversionFNC{
+        Arbol arbol;
+
+        public ConversionFNC(Arbol arbol){
+            this.arbol = arbol;
+        }
+
+        void enOrden() {
+            System.out.println("FNC");
+            enOrdenRec(this.arbol.raiz);
+            System.out.println();
+        }
+
+        Nodo obtenerSubArbol(Nodo raiz){
+            if (raiz == null) {
+                return null;
+            }
+
+            Nodo nuevoNodo = new Nodo(new Token(raiz.token.kind,raiz.token.image));
+            nuevoNodo.izquierdo = obtenerSubArbol(raiz.izquierdo);
+            nuevoNodo.derecho = obtenerSubArbol(raiz.derecho);
+
+            return nuevoNodo;
+        }
+
+        void enOrdenRec(Nodo raiz) {
+            if (raiz != null) {
+                enOrdenRec(raiz.izquierdo);
+                System.out.print(raiz.token.image + " ");
+                //puedo hacer que los metodos de los nodos retornen algun valor que me indique si se hizo un cambio,
+                //si se hizo un cambio, entonces se vuelve a recorrer el arbol segun el algoritmo de la FNC
+                aplicarSustituciones(raiz);
+
+                enOrdenRec(raiz.derecho);
+            }
+
+            /*
+            //ORDEN
+            enOrdenRec(raiz.izquierdo);
+            System.out.print(raiz.valor + " ");
+            enOrdenRec(raiz.derecho);*/
+
+            /*//PREORDEN
+            System.out.print(raiz.valor + " ");
+            enOrdenRec(raiz.izquierdo);
+            enOrdenRec(raiz.derecho);*/
+        }
+
+        void aplicarSustituciones(Nodo raiz){
+
+            if(raiz.token.kind == BICONDICIONAL){
+                sustituyeBicondicional(raiz);
+            }else{
+
+            }
+
+
+        }
+
+
+        void sustituyeBicondicional(Nodo raiz){
+            Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
+            Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
+
+            Nodo nodoIzqB = obtenerSubArbol(raiz.izquierdo);
+            Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
+
+            raiz.token = new Token(CONJUNCION, "&");
+
+            raiz.izquierdo.token = new Token(CONDICIONAL, ">");
+            raiz.izquierdo.izquierdo = nodoIzqA;
+            raiz.izquierdo.derecho = nodoDerA;
+
+            raiz.derecho.token = new Token(CONDICIONAL, ">");
+            raiz.derecho.izquierdo = nodoDerB;
+            raiz.derecho.derecho = nodoIzqB;
+        }
+
+        /*void sustituyeCondicional(Nodo raiz){
+            if(raiz.valor.equals(">")){
+                Nodo nodoIzq = obtenerVariable(raiz.izquierdo);
+                Nodo nodoDer = obtenerVariable(raiz.derecho);
+
+                raiz.valor = "|";
+                
+                raiz.izquierdo = new Nodo("¬");
+                raiz.izquierdo.derecho = nodoIzq;
+                raiz.derecho = nodoDer;
+            }
+        }*/
+
+
+        //Busca el nodo VARIABLE sin importar cuantas negaciones tenga antes y retorna un nuevo nodo con la misma información
+        Nodo obtenerVariable(Nodo nodo){
+            Nodo nodoAux;
+            if(nodo.token.kind == NEGACION){
+                nodoAux = new Nodo(new Token(NEGACION, "\u00ac"));
+                nodoAux.derecho = obtenerVariable(nodo.derecho);
+                return nodoAux;
+            }else{
+                nodoAux = new Nodo(nodo.token);
+                return nodoAux;
+            }
+        }
+
+        //Comprueba si ambos hijos del nodo son variables para que se pueda aplicar la sustitución
+        boolean aplicarSustitucion(Nodo nodo){
+            if(nodo.izquierdo.token.kind == VARIABLE && nodo.derecho.token.kind == VARIABLE){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    }
+
   final public void inicializarArbol() throws ParseException {
     Arbol arbol;
+    ConversionFNC conversion;
     arbol = condicionales();
-                            System.out.println("Fin"); arbol.enOrden();
+                            System.out.println("Fin"); arbol.enOrden(); conversion = new ConversionFNC(arbol); conversion.enOrden(); conversion.enOrden();
   }
 
   final public Arbol condicionales() throws ParseException {
@@ -295,6 +411,16 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
+  private boolean jj_3R_7() {
+    if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
+    return false;
+  }
+
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
     if (jj_3R_4()) return true;
@@ -408,16 +534,6 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_10()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3R_7() {
-    if (jj_3R_3()) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
     return false;
   }
 
