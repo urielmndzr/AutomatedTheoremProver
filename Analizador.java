@@ -7,6 +7,7 @@ public class Analizador implements AnalizadorConstants {
         try{
             System.out.println("Iniciando an\u00e1lisis...\n");
             analizador.inicializarArbol();
+
             System.out.println("An\u00e1lisis exitoso");
         }catch(ParseException e){
             System.out.println("Error de sintaxis: " + e.getMessage());
@@ -71,12 +72,6 @@ public class Analizador implements AnalizadorConstants {
             this.arbol = arbol;
         }
 
-        void enOrden() {
-            System.out.println("FNC");
-            enOrdenRec(this.arbol.raiz);
-            System.out.println();
-        }
-
         Nodo obtenerSubArbol(Nodo raiz){
             if (raiz == null) {
                 return null;
@@ -89,40 +84,44 @@ public class Analizador implements AnalizadorConstants {
             return nuevoNodo;
         }
 
-        void enOrdenRec(Nodo raiz) {
-            if (raiz != null) {
-                enOrdenRec(raiz.izquierdo);
-                System.out.print(raiz.token.image + " ");
-                //puedo hacer que los metodos de los nodos retornen algun valor que me indique si se hizo un cambio,
-                //si se hizo un cambio, entonces se vuelve a recorrer el arbol segun el algoritmo de la FNC
-                aplicarSustituciones(raiz);
+        void generarFNC(){
+            boolean detectaCambios = false;
+            System.out.println("Generar FNC");
+            do{
+                detectaCambios = aplicarConversion(this.arbol.raiz);
+            }while(detectaCambios);
 
-                enOrdenRec(raiz.derecho);
-            }
-
-            /*
-            //ORDEN
-            enOrdenRec(raiz.izquierdo);
-            System.out.print(raiz.valor + " ");
-            enOrdenRec(raiz.derecho);*/
-
-            /*//PREORDEN
-            System.out.print(raiz.valor + " ");
-            enOrdenRec(raiz.izquierdo);
-            enOrdenRec(raiz.derecho);*/
+            System.out.println();
         }
 
-        void aplicarSustituciones(Nodo raiz){
+        boolean aplicarConversion(Nodo raiz){
+            boolean detectaCambios = false;
+
+            if (raiz != null) {
+                aplicarConversion(raiz.izquierdo);
+
+                //System.out.print(raiz.token.image + " ");
+                detectaCambios = aplicarSustituciones(raiz);
+
+                aplicarConversion(raiz.derecho);
+            }
+            return detectaCambios;
+        }
+
+        boolean aplicarSustituciones(Nodo raiz){
+            boolean detectaCambios = false;
 
             if(raiz.token.kind == BICONDICIONAL){
                 sustituyeBicondicional(raiz);
+                detectaCambios = true;
+            }else if(raiz.token.kind == CONDICIONAL){
+                sustituyeCondicional(raiz);
+                detectaCambios = true;
             }else{
-
+                detectaCambios = false;
             }
-
-
+            return detectaCambios;
         }
-
 
         void sustituyeBicondicional(Nodo raiz){
             Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
@@ -142,19 +141,17 @@ public class Analizador implements AnalizadorConstants {
             raiz.derecho.derecho = nodoIzqB;
         }
 
-        /*void sustituyeCondicional(Nodo raiz){
-            if(raiz.valor.equals(">")){
-                Nodo nodoIzq = obtenerVariable(raiz.izquierdo);
-                Nodo nodoDer = obtenerVariable(raiz.derecho);
+        void sustituyeCondicional(Nodo raiz){
+            raiz.token = new Token(DISYUNCION, "|");
 
-                raiz.valor = "|";
-                
-                raiz.izquierdo = new Nodo("¬");
-                raiz.izquierdo.derecho = nodoIzq;
-                raiz.derecho = nodoDer;
-            }
-        }*/
+            Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+            Nodo nodoDer = obtenerSubArbol(raiz.derecho);
 
+            raiz.izquierdo.token = new Token(NEGACION, "\u00ac");
+            raiz.izquierdo.derecho = nodoIzq;
+
+            raiz.derecho = nodoDer;
+        }
 
         //Busca el nodo VARIABLE sin importar cuantas negaciones tenga antes y retorna un nuevo nodo con la misma información
         Nodo obtenerVariable(Nodo nodo){
@@ -183,7 +180,7 @@ public class Analizador implements AnalizadorConstants {
     Arbol arbol;
     ConversionFNC conversion;
     arbol = condicionales();
-                            System.out.println("Fin"); arbol.enOrden(); conversion = new ConversionFNC(arbol); conversion.enOrden(); conversion.enOrden();
+                            System.out.println("Fin"); arbol.enOrden(); conversion = new ConversionFNC(arbol); conversion.generarFNC(); arbol.enOrden();
   }
 
   final public Arbol condicionales() throws ParseException {
@@ -411,6 +408,21 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
+  private boolean jj_3_9() {
+    if (jj_scan_token(VARIABLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_5() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_9()) {
+    jj_scanpos = xsp;
+    if (jj_3_10()) return true;
+    }
+    return false;
+  }
+
   private boolean jj_3R_7() {
     if (jj_3R_3()) return true;
     return false;
@@ -518,21 +530,6 @@ public class Analizador implements AnalizadorConstants {
     if (jj_3_2()) {
     jj_scanpos = xsp;
     if (jj_3_3()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3_9() {
-    if (jj_scan_token(VARIABLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_5() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_9()) {
-    jj_scanpos = xsp;
-    if (jj_3_10()) return true;
     }
     return false;
   }
