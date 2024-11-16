@@ -91,6 +91,7 @@ public class Analizador{
 
         void generarFNC(){
             boolean detectaCambios = false;
+
             System.out.println("Generar FNC");
             do{
                 detectaCambios = aplicarConversion(this.arbol.raiz);
@@ -103,8 +104,11 @@ public class Analizador{
             boolean detectaCambios = false;
 
             if (raiz != null) {
+                
                 aplicarConversion(raiz.izquierdo);
+
                 detectaCambios = aplicarSustituciones(raiz);
+
                 aplicarConversion(raiz.derecho);
             }
             return detectaCambios;
@@ -119,6 +123,14 @@ public class Analizador{
             }else if(raiz.token.kind == CONDICIONAL){
                 sustituyeCondicional(raiz);
                 detectaCambios = true;
+            }else if(raiz.token.kind == NEGACION){
+                if(raiz.derecho.token.kind == NEGACION){
+                    eliminarNegacion(raiz);
+                    System.out.println("x: "+raiz.token.image);
+                    //detectaCambios = true;
+                }else{
+                    //detectaCambios = false;
+                }
             }else{
                 detectaCambios = false;
             }
@@ -155,27 +167,15 @@ public class Analizador{
             raiz.derecho = nodoDer;
         }
 
-        //Busca el nodo VARIABLE sin importar cuantas negaciones tenga antes y retorna un nuevo nodo con la misma información
-        Nodo obtenerVariable(Nodo nodo){
-            Nodo nodoAux;
-            if(nodo.token.kind == NEGACION){
-                nodoAux = new Nodo(new Token(NEGACION, "¬"));
-                nodoAux.derecho = obtenerVariable(nodo.derecho);
-                return nodoAux;
-            }else{
-                nodoAux = new Nodo(nodo.token);
-                return nodoAux;
-            }
+        void eliminarNegacion(Nodo raiz){
+            /*System.out.println("padre: "+raiz.padre.token.image);
+            System.out.println("Raiz1: "+raiz.token.image);
+            System.out.println("Raiz2: "+raiz.derecho.token.image);
+            System.out.println("Raiz3: "+raiz.derecho.derecho.token.image);
+            raiz.padre.derecho = raiz.derecho.derecho;
+            System.out.println("Raiz asig: "+raiz.padre.token.image);*/
         }
 
-        //Comprueba si ambos hijos del nodo son variables para que se pueda aplicar la sustitución
-        boolean aplicarSustitucion(Nodo nodo){
-            if(nodo.izquierdo.token.kind == VARIABLE && nodo.derecho.token.kind == VARIABLE){
-                return true;
-            }else{
-                return false;
-            }
-        }
     }
 }
 

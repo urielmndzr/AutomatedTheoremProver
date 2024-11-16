@@ -16,12 +16,13 @@ public class Analizador implements AnalizadorConstants {
 
     class Nodo {
         Token token;
-        Nodo izquierdo, derecho;
+        Nodo izquierdo, derecho, padre;
 
         public Nodo(Token token){
             this.token = token;
             this.izquierdo = null;
             this.derecho = null;
+            this.padre = null;
         }
     }
 
@@ -54,6 +55,9 @@ public class Analizador implements AnalizadorConstants {
             operador.izquierdo = arbolIzq.raiz;
             operador.derecho = arbolDer.raiz;
             this.raiz = operador;
+            //Agregado para padre
+            operador.izquierdo.padre = operador;
+            operador.derecho.padre = operador;
         }
 
         public Nodo getRaiz(){
@@ -67,6 +71,7 @@ public class Analizador implements AnalizadorConstants {
 
     class ConversionFNC{
         Arbol arbol;
+        //Nodo padre;
 
         public ConversionFNC(Arbol arbol){
             this.arbol = arbol;
@@ -86,6 +91,7 @@ public class Analizador implements AnalizadorConstants {
 
         void generarFNC(){
             boolean detectaCambios = false;
+            //this.padre = this.arbol.raiz;
             System.out.println("Generar FNC");
             do{
                 detectaCambios = aplicarConversion(this.arbol.raiz);
@@ -96,11 +102,14 @@ public class Analizador implements AnalizadorConstants {
 
         boolean aplicarConversion(Nodo raiz){
             boolean detectaCambios = false;
+            //this.padre = padre;
+
 
             if (raiz != null) {
+                System.out.println("PADRE: "+raiz.padre.token.image);
+
                 aplicarConversion(raiz.izquierdo);
 
-                //System.out.print(raiz.token.image + " ");
                 detectaCambios = aplicarSustituciones(raiz);
 
                 aplicarConversion(raiz.derecho);
@@ -117,6 +126,14 @@ public class Analizador implements AnalizadorConstants {
             }else if(raiz.token.kind == CONDICIONAL){
                 sustituyeCondicional(raiz);
                 detectaCambios = true;
+            }else if(raiz.token.kind == NEGACION){
+                if(raiz.derecho.token.kind == NEGACION){
+                    eliminarNegacion(raiz);
+                    System.out.println("x: "+raiz.token.image);
+                    //detectaCambios = true;
+                }else{
+                    //detectaCambios = false;
+                }
             }else{
                 detectaCambios = false;
             }
@@ -151,6 +168,15 @@ public class Analizador implements AnalizadorConstants {
             raiz.izquierdo.derecho = nodoIzq;
 
             raiz.derecho = nodoDer;
+        }
+
+        void eliminarNegacion(Nodo raiz){
+            System.out.println("padre: "+raiz.padre.token.image);
+            System.out.println("Raiz1: "+raiz.token.image);
+            System.out.println("Raiz2: "+raiz.derecho.token.image);
+            System.out.println("Raiz3: "+raiz.derecho.derecho.token.image);
+            raiz.padre.derecho = raiz.derecho.derecho;
+            System.out.println("Raiz asig: "+raiz.padre.token.image);
         }
 
         //Busca el nodo VARIABLE sin importar cuantas negaciones tenga antes y retorna un nuevo nodo con la misma información
@@ -408,31 +434,6 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
-  private boolean jj_3_9() {
-    if (jj_scan_token(VARIABLE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_5() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_9()) {
-    jj_scanpos = xsp;
-    if (jj_3_10()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_7() {
-    if (jj_3R_3()) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
-    return false;
-  }
-
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
     if (jj_3R_4()) return true;
@@ -531,6 +532,31 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_3()) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3_9() {
+    if (jj_scan_token(VARIABLE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_5() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_9()) {
+    jj_scanpos = xsp;
+    if (jj_3_10()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_7() {
+    if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
     return false;
   }
 
