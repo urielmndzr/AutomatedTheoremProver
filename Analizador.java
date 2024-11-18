@@ -48,7 +48,8 @@ public class Analizador implements AnalizadorConstants {
                 //System.out.println("K: "+raiz.token.image + " ");
                 enOrdenRec(raiz.izquierdo);
 
-                System.out.print(raiz.token.image + " ");
+                //System.out.print(raiz.token.image + " ");
+                System.out.println(raiz.token.image + " - "+ raiz);
 
                 if(raiz.padre == null){
                    System.out.print("Padre: "+raiz.token.image + " ");
@@ -80,6 +81,7 @@ public class Analizador implements AnalizadorConstants {
 
     class ConversionFNC{
         Arbol arbol;
+        boolean detectaCambios;
 
         public ConversionFNC(Arbol arbol){
             this.arbol = arbol;
@@ -98,40 +100,43 @@ public class Analizador implements AnalizadorConstants {
         }
 
         void generarFNC(){
-            boolean detectaCambios = false;
+            detectaCambios = false;
 
             System.out.println("Generar FNC");
             do{
                 System.out.println("cmbs 1-----");
-                detectaCambios = aplicarConversion(this.arbol.raiz);
+                //detectaCambios = aplicarConversion(this.arbol.raiz);
+                detectaCambios = false;
+                aplicarConversion(this.arbol.raiz);
                 System.out.println("cmbs");
             }while(detectaCambios);
 
             System.out.println();
         }
 
-        boolean aplicarConversion(Nodo raiz){
-            boolean detectaCambios = false;
+        void aplicarConversion(Nodo raiz){
+            //boolean detectaCambios = false;
             System.out.println("aplicar");
             if (raiz != null) {
-
-
-
 
                 System.out.println("again");
 
                 if(!detectaCambios){
+                    System.out.println("ENTRO");
                     aplicarConversion(raiz.izquierdo);
-                    detectaCambios = aplicarSustituciones(raiz);
+                    //detectaCambios = aplicarSustituciones(raiz);
+                    aplicarSustituciones(raiz);
                     System.out.println("no cambios");
                     aplicarConversion(raiz.derecho);
+                }else{
+                    //detectaCambios = false;
                 }
             }
-            return detectaCambios;
+            //return detectaCambios;
         }
 
-        boolean aplicarSustituciones(Nodo raiz){
-            boolean detectaCambios = false;
+        void aplicarSustituciones(Nodo raiz){
+            //boolean detectaCambios = false;
 
             if(raiz.token.kind == BICONDICIONAL){
                 sustituyeBicondicional(raiz);
@@ -145,17 +150,17 @@ public class Analizador implements AnalizadorConstants {
             }else if(raiz.token.kind == NEGACION){
                 if(raiz.derecho.token.kind == NEGACION){
                     eliminarNegacion(raiz);
-                    //System.out.print("raft: "+raiz.token.image);
+                    System.out.print("ENTRO DOBLE NEG: "+raiz.token.image);
                     detectaCambios = true;
                 }else{
-                    //detectaCambios = false;
+                    detectaCambios = false;
                 }
             }else{
                 System.out.println("elsefin");
                 //detectaCambios = false;
             }
             System.out.println("cambios: "+detectaCambios);
-            return detectaCambios;
+            //return detectaCambios;
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -193,15 +198,38 @@ public class Analizador implements AnalizadorConstants {
             if(raiz.padre != null){
                 if(raiz.padre.izquierdo == raiz){
                     System.out.println("por la izquierda");
+                    System.out.println("raiz: "+raiz);
+                    System.out.println("raiz.padre.der: "+raiz.padre.derecho);
+                    System.out.println("raiz.padre.izq: "+raiz.padre.izquierdo);
                     raiz.padre.izquierdo = raiz.derecho.derecho;
+                    raiz.derecho.derecho.padre = raiz.padre;
                 }else if(raiz.padre.derecho == raiz){
                     System.out.println("por la derecha");
+                    System.out.println("raiz: "+raiz);
+                    System.out.println("raiz.padre.der: "+raiz.padre.derecho);
+                    System.out.println("raiz.padre.izq: "+raiz.padre.izquierdo);
                     raiz.padre.derecho = raiz.derecho.derecho;
+                    raiz.derecho.derecho.padre = raiz.padre;
                 }
-            }else{
-                System.out.println("padre es null");
-            }
+                System.out.println("DEFECTO raiz: "+raiz);
+                System.out.println("raiz.padre.der: "+raiz.padre.derecho);
+                System.out.println("raiz.padre.izq: "+raiz.padre.izquierdo);
 
+            }else{
+                arbol.enOrden();
+
+                System.out.println("arbol raiz: "+this.arbol.raiz);
+                System.out.println("padre es null");
+                System.out.println("raiz.derecho.derecho: "+raiz.derecho.derecho);
+                System.out.println("raiz.derecho.derecho.padre: "+raiz.derecho.derecho.padre);
+                this.arbol.raiz = raiz.derecho.derecho;
+                System.out.println("new raiz: "+raiz);
+                this.arbol.raiz.padre = null;
+                //raiz.derecho.derecho.padre = null;
+
+            }
+            System.out.println("COSASAA");
+            arbol.enOrden();
             //System.out.println("1. r.padre: "+raiz.padre.token.image);
             //raiz.padre.izquierdo = raiz.derecho.derecho;
             //System.out.println("r.padre: "+raiz.padre.token.image);
@@ -485,6 +513,11 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
+    return false;
+  }
+
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
     if (jj_3R_4()) return true;
@@ -603,11 +636,6 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3R_7() {
     if (jj_3R_3()) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
     return false;
   }
 
