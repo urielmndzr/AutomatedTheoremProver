@@ -45,8 +45,14 @@ public class Analizador implements AnalizadorConstants {
 
         void enOrdenRec(Nodo raiz){
             if (raiz != null) {
+                //System.out.println("K: "+raiz.token.image + " ");
                 enOrdenRec(raiz.izquierdo);
+
                 System.out.print(raiz.token.image + " ");
+
+                if(raiz.padre == null){
+                   System.out.print("Padre: "+raiz.token.image + " ");
+                }
                 enOrdenRec(raiz.derecho);
             }
         }
@@ -54,10 +60,13 @@ public class Analizador implements AnalizadorConstants {
         public void insertar(Arbol arbolIzq, Arbol arbolDer, Nodo operador){
             operador.izquierdo = arbolIzq.raiz;
             operador.derecho = arbolDer.raiz;
-            this.raiz = operador;
-            //Agregado para padre
+
+            //TRATAR Padre
             operador.izquierdo.padre = operador;
             operador.derecho.padre = operador;
+            //fin
+
+            this.raiz = operador;
         }
 
         public Nodo getRaiz(){
@@ -71,7 +80,6 @@ public class Analizador implements AnalizadorConstants {
 
     class ConversionFNC{
         Arbol arbol;
-        //Nodo padre;
 
         public ConversionFNC(Arbol arbol){
             this.arbol = arbol;
@@ -91,10 +99,12 @@ public class Analizador implements AnalizadorConstants {
 
         void generarFNC(){
             boolean detectaCambios = false;
-            //this.padre = this.arbol.raiz;
+
             System.out.println("Generar FNC");
             do{
+                System.out.println("cmbs 1-----");
                 detectaCambios = aplicarConversion(this.arbol.raiz);
+                System.out.println("cmbs");
             }while(detectaCambios);
 
             System.out.println();
@@ -102,17 +112,20 @@ public class Analizador implements AnalizadorConstants {
 
         boolean aplicarConversion(Nodo raiz){
             boolean detectaCambios = false;
-            //this.padre = padre;
-
-
+            System.out.println("aplicar");
             if (raiz != null) {
-                System.out.println("PADRE: "+raiz.padre.token.image);
 
-                aplicarConversion(raiz.izquierdo);
 
-                detectaCambios = aplicarSustituciones(raiz);
 
-                aplicarConversion(raiz.derecho);
+
+                System.out.println("again");
+
+                if(!detectaCambios){
+                    aplicarConversion(raiz.izquierdo);
+                    detectaCambios = aplicarSustituciones(raiz);
+                    System.out.println("no cambios");
+                    aplicarConversion(raiz.derecho);
+                }
             }
             return detectaCambios;
         }
@@ -126,17 +139,22 @@ public class Analizador implements AnalizadorConstants {
             }else if(raiz.token.kind == CONDICIONAL){
                 sustituyeCondicional(raiz);
                 detectaCambios = true;
+            //}else if(comprobarDobleNegacion(raiz)){
+            //    eliminarNegacion(raiz);
+            //    detectaCambios = true;
             }else if(raiz.token.kind == NEGACION){
                 if(raiz.derecho.token.kind == NEGACION){
                     eliminarNegacion(raiz);
-                    System.out.println("x: "+raiz.token.image);
-                    //detectaCambios = true;
+                    //System.out.print("raft: "+raiz.token.image);
+                    detectaCambios = true;
                 }else{
                     //detectaCambios = false;
                 }
             }else{
-                detectaCambios = false;
+                System.out.println("elsefin");
+                //detectaCambios = false;
             }
+            System.out.println("cambios: "+detectaCambios);
             return detectaCambios;
         }
 
@@ -171,34 +189,64 @@ public class Analizador implements AnalizadorConstants {
         }
 
         void eliminarNegacion(Nodo raiz){
-            System.out.println("padre: "+raiz.padre.token.image);
-            System.out.println("Raiz1: "+raiz.token.image);
-            System.out.println("Raiz2: "+raiz.derecho.token.image);
-            System.out.println("Raiz3: "+raiz.derecho.derecho.token.image);
-            raiz.padre.derecho = raiz.derecho.derecho;
-            System.out.println("Raiz asig: "+raiz.padre.token.image);
-        }
-
-        //Busca el nodo VARIABLE sin importar cuantas negaciones tenga antes y retorna un nuevo nodo con la misma información
-        Nodo obtenerVariable(Nodo nodo){
-            Nodo nodoAux;
-            if(nodo.token.kind == NEGACION){
-                nodoAux = new Nodo(new Token(NEGACION, "\u00ac"));
-                nodoAux.derecho = obtenerVariable(nodo.derecho);
-                return nodoAux;
+            //raiz.derecho = raiz.derecho.derecho.derecho;
+            if(raiz.padre != null){
+                if(raiz.padre.izquierdo == raiz){
+                    System.out.println("por la izquierda");
+                    raiz.padre.izquierdo = raiz.derecho.derecho;
+                }else if(raiz.padre.derecho == raiz){
+                    System.out.println("por la derecha");
+                    raiz.padre.derecho = raiz.derecho.derecho;
+                }
             }else{
-                nodoAux = new Nodo(nodo.token);
-                return nodoAux;
+                System.out.println("padre es null");
             }
+
+            //System.out.println("1. r.padre: "+raiz.padre.token.image);
+            //raiz.padre.izquierdo = raiz.derecho.derecho;
+            //System.out.println("r.padre: "+raiz.padre.token.image);
+            //System.out.println("r.der.der: "+raiz.derecho.derecho.token.image);
+
+
+
+
+            /*if(padre.derecho != null){
+                if(padre.derecho.token.kind == NEGACION && padre.derecho.derecho.token.kind == NEGACION){
+                    padre.derecho = padre.derecho.derecho.derecho;
+                    System.out.println("Doble neg der");
+                }
+            }else if(padre.izquierdo != null){
+                if(padre.izquierdo.token.kind == NEGACION && padre.izquierdo.derecho.token.kind == NEGACION){
+                    padre.izquierdo = padre.izquierdo.derecho.derecho;
+                    System.out.println("Doble neg izq");
+                }
+            }else if(padre.padre == null){
+                if(padre.token.kind == NEGACION && padre.derecho.token.kind == NEGACION){
+                    padre = padre.derecho.derecho;
+                    System.out.println("Doble neg der pad null");
+                }
+            }*/
+
         }
 
-        //Comprueba si ambos hijos del nodo son variables para que se pueda aplicar la sustitución
-        boolean aplicarSustitucion(Nodo nodo){
-            if(nodo.izquierdo.token.kind == VARIABLE && nodo.derecho.token.kind == VARIABLE){
-                return true;
+        boolean comprobarDobleNegacion(Nodo padre){
+            if(padre.derecho != null){
+                if(padre.derecho.token.kind == NEGACION && padre.derecho.derecho.token.kind == NEGACION){
+                    return true;
+                }
+            }else if(padre.izquierdo != null){
+                if(padre.izquierdo.token.kind == NEGACION && padre.izquierdo.derecho.token.kind == NEGACION){
+                    return true;
+                }
+            }else if(padre.padre == null){
+                if(padre.token.kind == NEGACION && padre.derecho.token.kind == NEGACION){
+                    return true;
+                }
             }else{
                 return false;
             }
+
+            return false;
         }
     }
 
@@ -270,11 +318,11 @@ public class Analizador implements AnalizadorConstants {
   }
 
   final public Arbol procesarNegacion() throws ParseException {
-    Arbol arbolIzq = new Arbol();
+    Arbol arbolIzq = new Arbol(); //ArbolIzq tiene todas las negaciones
     Arbol arbolDer;
     if (jj_2_7(2)) {
       jj_consume_token(NEGACION);
-        if(arbolIzq.raiz == null){
+        if(arbolIzq.raiz == null){//Crea el nodo de negacion y busca cual es el ultimo hacia la derecha
             arbolIzq.setRaiz(new Nodo(token));
         }else{
             Nodo actual = arbolIzq.raiz;
@@ -282,6 +330,7 @@ public class Analizador implements AnalizadorConstants {
                 actual = actual.derecho;
             }
             actual.derecho = new Nodo(token);
+            actual.derecho.padre = actual; //SE DICE QUIEN ES EL NODO PADRE
         }
       arbolDer = procesarNegacion();
     } else if (jj_2_8(2)) {
@@ -294,11 +343,13 @@ public class Analizador implements AnalizadorConstants {
             arbolIzq.setRaiz(arbolDer.raiz);
         }
         else{
-            Nodo actual = arbolIzq.raiz;
+            Nodo actual = arbolIzq.raiz; //Se obtiene el nodo del arbol
             while(actual.derecho != null){
-                actual = actual.derecho;
+                actual = actual.derecho; //Se recorre hasta el ultimo nodo a la derecha en caso de haya habido negaciones
             }
+
             actual.derecho = arbolDer.raiz;
+            arbolDer.raiz.padre = actual;//SE DICE QUIEN ES EL NODO PADRE
         }
         {if (true) return arbolIzq;}
     throw new Error("Missing return statement in function");
@@ -503,19 +554,24 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
-  private boolean jj_3R_3() {
-    if (jj_3R_4()) return true;
+  private boolean jj_3_10() {
+    if (jj_3R_6()) return true;
     return false;
   }
 
-  private boolean jj_3_10() {
-    if (jj_3R_6()) return true;
+  private boolean jj_3R_3() {
+    if (jj_3R_4()) return true;
     return false;
   }
 
   private boolean jj_3_3() {
     if (jj_scan_token(BICONDICIONAL)) return true;
     if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_9() {
+    if (jj_scan_token(VARIABLE)) return true;
     return false;
   }
 
@@ -532,11 +588,6 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_3()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3_9() {
-    if (jj_scan_token(VARIABLE)) return true;
     return false;
   }
 
