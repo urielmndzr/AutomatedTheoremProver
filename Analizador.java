@@ -45,15 +45,9 @@ public class Analizador implements AnalizadorConstants {
 
         void enOrdenRec(Nodo raiz){
             if (raiz != null) {
-                //System.out.println("K: "+raiz.token.image + " ");
                 enOrdenRec(raiz.izquierdo);
-
-                //System.out.print(raiz.token.image + " ");
-                System.out.println(raiz.token.image + " - "+ raiz);
-
-                if(raiz.padre == null){
-                   //System.out.print("Padre: "+raiz.token.image + " ");
-                }
+                System.out.print(raiz.token.image + " ");
+                //System.out.println(raiz.token.image + " - "+ raiz);
                 enOrdenRec(raiz.derecho);
             }
         }
@@ -116,11 +110,11 @@ public class Analizador implements AnalizadorConstants {
 
             System.out.println("Generar FNC");
             do{
-                System.out.println("cmbs 1-----");
+                System.out.println("ITERACION");
                 //detectaCambios = aplicarConversion(this.arbol.raiz);
                 detectaCambios = false;
                 aplicarConversion(this.arbol.raiz);
-                System.out.println("cmbs");
+                //System.out.println("cmbs");
             }while(detectaCambios);
 
             System.out.println();
@@ -128,17 +122,17 @@ public class Analizador implements AnalizadorConstants {
 
         void aplicarConversion(Nodo raiz){
             //boolean detectaCambios = false;
-            System.out.println("aplicar");
+            //System.out.println("aplicar");
             if (raiz != null) {
 
-                System.out.println("again");
+                //System.out.println("again");
 
                 if(!detectaCambios){
-                    System.out.println("ENTRO");
+                    //System.out.println("ENTRO");
                     aplicarConversion(raiz.izquierdo);
                     //detectaCambios = aplicarSustituciones(raiz);
                     aplicarSustituciones(raiz);
-                    System.out.println("no cambios");
+                    //System.out.println("no cambios");
                     aplicarConversion(raiz.derecho);
                 }else{
                     //detectaCambios = false;
@@ -158,7 +152,7 @@ public class Analizador implements AnalizadorConstants {
             }else if(raiz.token.kind == NEGACION){
                 if(raiz.derecho.token.kind == NEGACION){
                     eliminarNegacion(raiz);
-                    System.out.print("ENTRO DOBLE NEG: "+raiz.token.image);
+                    //System.out.print("ENTRO DOBLE NEG: "+raiz.token.image);
                     detectaCambios = true;
                 }else{
                     detectaCambios = false;
@@ -169,7 +163,7 @@ public class Analizador implements AnalizadorConstants {
             }
             //System.out.println("cambios: "+detectaCambios);
             //return detectaCambios;
-            this.arbol.enOrden();
+            //this.arbol.enOrden();
         }
 
         void sustituyeBicondicional(Nodo raiz){
