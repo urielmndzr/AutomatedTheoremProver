@@ -97,7 +97,7 @@ public class Analizador{
 
             Nodo nuevoNodo = new Nodo(new Token(raiz.token.kind,raiz.token.image));
             //nuevoNodo.padre = raiz.padre;
-            System.out.println("nvo nodo: "+nuevoNodo.token.image);
+            //System.out.println("nvo nodo: "+nuevoNodo.token.image);
             nuevoNodo.izquierdo = obtenerSubArbol(raiz.izquierdo);
             if(nuevoNodo.izquierdo != null){
                 nuevoNodo.izquierdo.padre = nuevoNodo;
@@ -128,7 +128,9 @@ public class Analizador{
             if (raiz != null) {
                 if(!detectaCambios){
                     aplicarConversion(raiz.izquierdo);
-                    aplicarSustituciones(raiz);
+                    if(!detectaCambios){
+                        aplicarSustituciones(raiz);
+                    }
                     aplicarConversion(raiz.derecho);
                 }
             }
@@ -151,6 +153,13 @@ public class Analizador{
                 }
             }else{
                 //detectaCambios = false;
+            }
+
+            if(raiz.token.kind == NEGACION){
+                if(raiz.derecho.token.kind == CONJUNCION || raiz.derecho.token.kind == DISYUNCION){
+                    leyDeMorgan(raiz);
+                    detectaCambios = true;
+                }
             }
         }
 
@@ -203,6 +212,41 @@ public class Analizador{
             }else{//En el caso que haya una negación en la raiz del arbol
                 this.arbol.raiz = raiz.derecho.derecho;
                 this.arbol.raiz.padre = null;                
+            }
+        }
+
+        void leyDeMorgan(Nodo raiz){
+            if(raiz.derecho.token.kind == CONJUNCION){
+                Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
+                Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho); 
+
+                raiz.token = new Token(DISYUNCION, "|");
+
+                raiz.derecho = new Nodo(new Token(NEGACION,"¬"));
+                raiz.derecho.derecho = nodoDer;
+                raiz.derecho.padre = raiz;
+                nodoDer.padre = raiz.derecho;
+
+                raiz.izquierdo = new Nodo(new Token(NEGACION,"¬"));
+                raiz.izquierdo.derecho = nodoIzq;
+                raiz.izquierdo.padre = raiz;
+                nodoIzq.padre = raiz.izquierdo;
+
+            }else if(raiz.derecho.token.kind == DISYUNCION){
+                Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
+                Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho); 
+
+                raiz.token = new Token(CONJUNCION, "&");
+
+                raiz.derecho = new Nodo(new Token(NEGACION,"¬"));
+                raiz.derecho.derecho = nodoDer;
+                raiz.derecho.padre = raiz;
+                nodoDer.padre = raiz.derecho;
+
+                raiz.izquierdo = new Nodo(new Token(NEGACION,"¬"));
+                raiz.izquierdo.derecho = nodoIzq;
+                raiz.izquierdo.padre = raiz;
+                nodoIzq.padre = raiz.izquierdo;
             }
         }
     }
