@@ -50,8 +50,17 @@ public class Analizador{
 
         void enOrdenRec(Nodo raiz){
             if (raiz != null) {
+                //System.out.print(raiz.token.image + " ");
                 enOrdenRec(raiz.izquierdo);                
+                //System.out.println("cambio");
                 System.out.print(raiz.token.image + " ");
+                /*if(raiz.padre!=null){
+                    System.out.println("Padre: "+raiz.padre.token.image + " ");
+                }else{
+                    System.out.println("Padre null");
+                }
+                
+                System.out.println("Raiz: "+raiz.token.image + " ");*/
                 enOrdenRec(raiz.derecho);
             }
         }
@@ -87,8 +96,8 @@ public class Analizador{
             }
 
             Nodo nuevoNodo = new Nodo(new Token(raiz.token.kind,raiz.token.image));
-            nuevoNodo.padre = raiz.padre;
-
+            //nuevoNodo.padre = raiz.padre;
+            System.out.println("nvo nodo: "+nuevoNodo.token.image);
             nuevoNodo.izquierdo = obtenerSubArbol(raiz.izquierdo);
             if(nuevoNodo.izquierdo != null){
                 nuevoNodo.izquierdo.padre = nuevoNodo;
@@ -135,7 +144,7 @@ public class Analizador{
                 detectaCambios = true;
             }else if(raiz.token.kind == NEGACION){
                 if(raiz.derecho.token.kind == NEGACION){
-                    eliminarNegacion(raiz);
+                    eliminarDobleNegacion(raiz);
                     detectaCambios = true;
                 }else{
                     detectaCambios = false;
@@ -167,20 +176,22 @@ public class Analizador{
         }
 
         void sustituyeCondicional(Nodo raiz){
-            raiz.token = new Token(DISYUNCION, "|");
+            Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+            nodoIzq.padre = raiz.izquierdo;
 
-            Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo); 
-            nodoIzq.padre = raiz;
             Nodo nodoDer = obtenerSubArbol(raiz.derecho); 
             nodoDer.padre = raiz;
 
+            raiz.token = new Token(DISYUNCION, "|");
+
             raiz.izquierdo.token = new Token(NEGACION, "¬");
             raiz.izquierdo.derecho = nodoIzq;
+            raiz.izquierdo.izquierdo = null;
 
             raiz.derecho = nodoDer;
         }
 
-        void eliminarNegacion(Nodo raiz){
+        void eliminarDobleNegacion(Nodo raiz){
             if(raiz.padre != null){ 
                 if(raiz.padre.izquierdo == raiz){
                     raiz.padre.izquierdo = raiz.derecho.derecho;
