@@ -368,15 +368,18 @@ public class Analizador implements AnalizadorConstants {
 
 
         void leyConmutativa(Nodo raiz){
-            if(raiz.token.kind == DISYUNCION){//Por la derecha
-                if(raiz.izquierdo.token.kind == DISYUNCION && (raiz.derecho.token.kind == VARIABLE || raiz.derecho.token.kind == NEGACION)){
+            boolean detectaConmutacion = false;
 
-                    if(raiz.derecho.token.kind == VARIABLE){
+            if(raiz.token.kind == DISYUNCION){
+                //Verifica que la otra disyunción esté a la izquierda
+                if(raiz.izquierdo.token.kind == DISYUNCION){
 
-                        if(raiz.izquierdo.izquierdo.token.kind == VARIABLE){
+                    if(raiz.derecho.token.kind == VARIABLE){ //Verifica de lado derecho haya una variable (sola)
+                        System.out.println("VAR SOLA LADO DERECHO");
+                        //Se trata el nodo izquierdo.izquierdo
+                        if(raiz.izquierdo.izquierdo.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una variable
 
-                            if(raiz.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){
-                                //Hacer cambio
+                            if(raiz.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){//Verifica que sean la misma variable
                                 Nodo nodoDer = obtenerSubArbol(raiz.derecho);
 
                                 raiz.izquierdo.derecho.padre = raiz;
@@ -384,29 +387,234 @@ public class Analizador implements AnalizadorConstants {
 
                                 raiz.izquierdo.derecho = nodoDer;
                                 nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
                             }
 
-                            System.out.println("entro");
+                        }else if(raiz.izquierdo.izquierdo.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una negación
 
-                        }else if(raiz.izquierdo.izquierdo.token.kind == NEGACION){
+                            if(raiz.derecho.token.image.equals(raiz.izquierdo.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
 
+                                raiz.izquierdo.derecho.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.derecho;
+
+                                raiz.izquierdo.derecho = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                            }
+                        }
+
+                        //Se trata el nodo izquierdo.derecho
+                        if(raiz.izquierdo.derecho.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una variable
+
+                            if(raiz.derecho.token.image.equals(raiz.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.izquierdo.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.izquierdo;
+
+                                raiz.izquierdo.izquierdo = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                            }
+
+                        }else if(raiz.izquierdo.derecho.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una negación
+
+                            if(raiz.derecho.token.image.equals(raiz.izquierdo.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.izquierdo.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.izquierdo;
+
+                                raiz.izquierdo.izquierdo = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                            }
+                        }
+
+                    }else if(raiz.derecho.token.kind == NEGACION){//Verifica que de lado derecho haya una negación (seguida de una variable)
+                        System.out.println("VAR NEGACION LADO DERECHO");
+                        //Se trata el nodo izquierdo.izquierdo
+                        if(raiz.izquierdo.izquierdo.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una variable
+
+                            if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.derecho.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.derecho;
+
+                                raiz.izquierdo.derecho = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                                System.out.println("COSA111");
+                            }
+
+                        }else if(raiz.izquierdo.izquierdo.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una negación
+
+                            if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.derecho.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.derecho;
+
+                                raiz.izquierdo.derecho = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                                System.out.println("COSA222");
+                            }
 
                         }
 
-                    }else if(raiz.derecho.token.kind == NEGACION){
-                        if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){
-                            //Hacer cambio
-                            Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
+                        //Se trata el nodo izquierdo.derecho
+                        if(raiz.izquierdo.derecho.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una variable
+                            System.out.println("cosa");
+                            if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
 
-                            raiz.izquierdo.derecho.padre = raiz;
-                            raiz.derecho = raiz.izquierdo.derecho;
+                                raiz.izquierdo.izquierdo.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.izquierdo;
 
-                            raiz.izquierdo.derecho = nodoDer;
-                            nodoDer.padre = raiz.izquierdo;
+                                raiz.izquierdo.izquierdo = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                            }
+
+                        }else if(raiz.izquierdo.derecho.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una negación
+                            System.out.println("cosa2");
+                            if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.izquierdo.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.izquierdo;
+
+                                raiz.izquierdo.izquierdo = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                                detectaConmutacion = true;
+                            }
                         }
                     }
+                }//Fin disyunción a la IZQUIERDA
 
-                }
+                //Verifica que la otra disyunción esté a la DERECHA
+                if(raiz.derecho.token.kind == DISYUNCION){
+
+                    if(raiz.izquierdo.token.kind == VARIABLE){ //Verifica de lado IZQUIERDO haya una variable (sola)
+
+                        //Se trata que el Nodo raiz.izquierdo == raiz.derecho.izquierdo
+                        if(raiz.derecho.izquierdo.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una variable
+
+                            if(raiz.izquierdo.token.image.equals(raiz.derecho.izquierdo.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.derecho.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.derecho;
+
+                                raiz.derecho.derecho = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+
+                        }else if(raiz.derecho.izquierdo.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una negación
+
+                            if(raiz.izquierdo.token.image.equals(raiz.derecho.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.derecho.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.derecho;
+
+                                raiz.derecho.derecho = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }
+
+                        //Se trata que el Nodo raiz.izquierdo == raiz.derecho.derecho
+                        if(raiz.derecho.derecho.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una variable
+
+                            if(raiz.izquierdo.token.image.equals(raiz.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.izquierdo.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.izquierdo;
+
+                                raiz.derecho.izquierdo = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }else if(raiz.derecho.derecho.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una negación
+
+                            if(raiz.izquierdo.token.image.equals(raiz.derecho.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.izquierdo.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.izquierdo;
+
+                                raiz.derecho.izquierdo = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }
+
+
+                    }else if(raiz.izquierdo.token.kind == NEGACION){//Verifica que de lado IZQUIERDO haya una negación (seguida de una variable)
+
+                        //Se trata que el Nodo raiz.izquierdo == raiz.derecho.izquierdo
+                        if(raiz.derecho.izquierdo.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una variable
+
+                            if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.izquierdo.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.derecho.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.derecho;
+
+                                raiz.derecho.derecho = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+
+                        }else if(raiz.derecho.izquierdo.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo IZQUIERDO de la disyunción hija sea una negación
+
+                            if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.izquierdo.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.derecho.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.derecho;
+
+                                raiz.derecho.derecho = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }
+
+                        //Se trata que el Nodo raiz.izquierdo == raiz.derecho.derecho
+                        if(raiz.derecho.derecho.token.kind == VARIABLE && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una variable
+
+                            if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.izquierdo.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.izquierdo;
+
+                                raiz.derecho.izquierdo = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }else if(raiz.derecho.derecho.token.kind == NEGACION && !detectaConmutacion){//Verifica que el nodo DERECHO de la disyunción hija sea una negación
+
+                            if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.derecho.derecho.token.image)){//Verifica que sean la misma variable
+                                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+
+                                raiz.derecho.izquierdo.padre = raiz;
+                                raiz.izquierdo = raiz.derecho.izquierdo;
+
+                                raiz.derecho.izquierdo = nodoIzq;
+                                nodoIzq.padre = raiz.derecho;
+                                detectaConmutacion = true;
+                            }
+                        }
+                    }
+                }//Fin disyunción a la derecha
+
             }
         }
     }
@@ -646,16 +854,6 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
-  private boolean jj_3R_7() {
-    if (jj_3R_3()) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
-    return false;
-  }
-
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
     if (jj_3R_4()) return true;
@@ -678,6 +876,12 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
+  private boolean jj_3_13() {
+    if (jj_scan_token(LLAVE_IZQ)) return true;
+    if (jj_3R_7()) return true;
+    return false;
+  }
+
   private boolean jj_3_5() {
     if (jj_scan_token(CONJUNCION)) return true;
     if (jj_3R_4()) return true;
@@ -691,12 +895,6 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_6()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3_13() {
-    if (jj_scan_token(LLAVE_IZQ)) return true;
-    if (jj_3R_7()) return true;
     return false;
   }
 
@@ -769,6 +967,16 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_10()) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3R_7() {
+    if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
     return false;
   }
 
