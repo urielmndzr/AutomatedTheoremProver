@@ -159,7 +159,7 @@ public class Analizador implements AnalizadorConstants {
 
 
             leyDistributiva(raiz);
-            //leyDistributiva(raiz);
+            leyConmutativa(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -366,6 +366,49 @@ public class Analizador implements AnalizadorConstants {
             }
         }
 
+
+        void leyConmutativa(Nodo raiz){
+            if(raiz.token.kind == DISYUNCION){//Por la derecha
+                if(raiz.izquierdo.token.kind == DISYUNCION && (raiz.derecho.token.kind == VARIABLE || raiz.derecho.token.kind == NEGACION)){
+
+                    if(raiz.derecho.token.kind == VARIABLE){
+
+                        if(raiz.izquierdo.izquierdo.token.kind == VARIABLE){
+
+                            if(raiz.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){
+                                //Hacer cambio
+                                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+
+                                raiz.izquierdo.derecho.padre = raiz;
+                                raiz.derecho = raiz.izquierdo.derecho;
+
+                                raiz.izquierdo.derecho = nodoDer;
+                                nodoDer.padre = raiz.izquierdo;
+                            }
+
+                            System.out.println("entro");
+
+                        }else if(raiz.izquierdo.izquierdo.token.kind == NEGACION){
+
+
+                        }
+
+                    }else if(raiz.derecho.token.kind == NEGACION){
+                        if(raiz.derecho.derecho.token.image.equals(raiz.izquierdo.izquierdo.token.image)){
+                            //Hacer cambio
+                            Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
+
+                            raiz.izquierdo.derecho.padre = raiz;
+                            raiz.derecho = raiz.izquierdo.derecho;
+
+                            raiz.izquierdo.derecho = nodoDer;
+                            nodoDer.padre = raiz.izquierdo;
+                        }
+                    }
+
+                }
+            }
+        }
     }
 
   final public void inicializarArbol() throws ParseException {
