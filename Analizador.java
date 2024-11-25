@@ -161,6 +161,7 @@ public class Analizador implements AnalizadorConstants {
             leyDistributiva(raiz);
             leyConmutativa(raiz);
             idempotencia(raiz);
+            complementacion(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -859,7 +860,6 @@ public class Analizador implements AnalizadorConstants {
         }
 
         void idempotencia(Nodo raiz){
-
             if(raiz.token.kind == CONJUNCION || raiz.token.kind == DISYUNCION){
 
                 if(raiz.izquierdo.token.kind == VARIABLE){
@@ -909,7 +909,96 @@ public class Analizador implements AnalizadorConstants {
                 }
 
             }
+        }
 
+        void complementacion(Nodo raiz){
+
+            if(raiz.token.kind == DISYUNCION){
+
+                if(raiz.izquierdo.token.kind == VARIABLE && raiz.derecho.token.kind == NEGACION){
+                    //Comprueba que haya una variable del lado izquierdo y de lado derecho una negacion 
+                    if(raiz.izquierdo.token.image.equals(raiz.derecho.derecho.token.image)){
+                        Nodo nodoRaiz = new Nodo(new Token(TAUTOLOGIA,"1"));
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+
+                }else if(raiz.izquierdo.token.kind == NEGACION && raiz.derecho.token.kind == VARIABLE){
+                    //Comprueba que haya una negación de lado izquierdo y una variable de lado derecho
+                    if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.token.image)){
+                        Nodo nodoRaiz = new Nodo(new Token(TAUTOLOGIA,"1"));
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+                }
+
+            }else if(raiz.token.kind == CONJUNCION){
+
+                if(raiz.izquierdo.token.kind == VARIABLE && raiz.derecho.token.kind == NEGACION){
+                    //Comprueba que haya una variable del lado izquierdo y de lado derecho una negacion 
+                    if(raiz.izquierdo.token.image.equals(raiz.derecho.derecho.token.image)){
+                        Nodo nodoRaiz = new Nodo(new Token(CONTRADICCION,"0"));
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+
+                }else if(raiz.izquierdo.token.kind == NEGACION && raiz.derecho.token.kind == VARIABLE){
+                    //Comprueba que haya una negación de lado izquierdo y una variable de lado derecho
+                    if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.token.image)){
+                        Nodo nodoRaiz = new Nodo(new Token(CONTRADICCION,"0"));
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+                }
+            }
 
 
         }
@@ -1150,6 +1239,22 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
+  private boolean jj_3_7() {
+    if (jj_scan_token(NEGACION)) return true;
+    if (jj_3R_4()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_4() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_7()) {
+    jj_scanpos = xsp;
+    if (jj_3_8()) return true;
+    }
+    return false;
+  }
+
   private boolean jj_3_6() {
     if (jj_scan_token(DISYUNCION)) return true;
     if (jj_3R_4()) return true;
@@ -1257,22 +1362,6 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3_8() {
     if (jj_3R_5()) return true;
-    return false;
-  }
-
-  private boolean jj_3_7() {
-    if (jj_scan_token(NEGACION)) return true;
-    if (jj_3R_4()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_4() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_7()) {
-    jj_scanpos = xsp;
-    if (jj_3_8()) return true;
-    }
     return false;
   }
 

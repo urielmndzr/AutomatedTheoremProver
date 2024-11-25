@@ -33,7 +33,7 @@ public interface AnalizadorConstants {
   /** RegularExpression Id. */
   int LLAVE_DER = 12;
   /** RegularExpression Id. */
-  int FORMULAVALIDA = 18;
+  int TAUTOLOGIA = 18;
   /** RegularExpression Id. */
   int CONTRADICCION = 19;
 
