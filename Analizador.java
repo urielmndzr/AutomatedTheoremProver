@@ -160,6 +160,7 @@ public class Analizador implements AnalizadorConstants {
 
             leyDistributiva(raiz);
             leyConmutativa(raiz);
+            idempotencia(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -856,6 +857,62 @@ public class Analizador implements AnalizadorConstants {
             }//Fin conmutación de la conjunción
 
         }
+
+        void idempotencia(Nodo raiz){
+
+            if(raiz.token.kind == CONJUNCION || raiz.token.kind == DISYUNCION){
+
+                if(raiz.izquierdo.token.kind == VARIABLE){
+
+                    if(raiz.izquierdo.token.image.equals(raiz.derecho.token.image)){//Comprueba que ambos nodos sean variable e iguales
+                        Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+
+
+                }else if(raiz.izquierdo.token.kind == NEGACION){
+
+                    if(raiz.derecho.token.kind == NEGACION){
+
+                        if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.derecho.token.image)){//Comprueba que ambos nodos sean variable e iguales
+                            Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                            if(raiz.padre != null){
+                                if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                    raiz.padre.izquierdo = nodoRaiz;
+                                    nodoRaiz.padre = raiz.padre;
+
+                                }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                    raiz.padre.derecho = nodoRaiz;
+                                    nodoRaiz.padre = raiz.padre;
+                                }
+                            }else{//el nodo es la raiz del arbol
+                                this.arbol.raiz = nodoRaiz;
+                                nodoRaiz.padre = null;
+                            }
+                        }
+                    }
+
+                }
+
+            }
+
+
+
+        }
     }
 
   final public void inicializarArbol() throws ParseException {
@@ -1093,22 +1150,6 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
-  private boolean jj_3_7() {
-    if (jj_scan_token(NEGACION)) return true;
-    if (jj_3R_4()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_4() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_7()) {
-    jj_scanpos = xsp;
-    if (jj_3_8()) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3_6() {
     if (jj_scan_token(DISYUNCION)) return true;
     if (jj_3R_4()) return true;
@@ -1172,14 +1213,14 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
-  private boolean jj_3_9() {
-    if (jj_scan_token(VARIABLE)) return true;
-    return false;
-  }
-
   private boolean jj_3_3() {
     if (jj_scan_token(BICONDICIONAL)) return true;
     if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_9() {
+    if (jj_scan_token(VARIABLE)) return true;
     return false;
   }
 
@@ -1216,6 +1257,22 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3_8() {
     if (jj_3R_5()) return true;
+    return false;
+  }
+
+  private boolean jj_3_7() {
+    if (jj_scan_token(NEGACION)) return true;
+    if (jj_3R_4()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_4() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_7()) {
+    jj_scanpos = xsp;
+    if (jj_3_8()) return true;
+    }
     return false;
   }
 

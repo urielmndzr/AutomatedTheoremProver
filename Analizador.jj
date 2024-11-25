@@ -165,6 +165,7 @@ public class Analizador{
 
             leyDistributiva(raiz);
             leyConmutativa(raiz);
+            idempotencia(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -859,6 +860,62 @@ public class Analizador{
                     }
                 }//Fin conjunción a la derecha
             }//Fin conmutación de la conjunción
+
+        }
+
+        void idempotencia(Nodo raiz){
+
+            if(raiz.token.kind == CONJUNCION || raiz.token.kind == DISYUNCION){
+                
+                if(raiz.izquierdo.token.kind == VARIABLE){
+                    
+                    if(raiz.izquierdo.token.image.equals(raiz.derecho.token.image)){//Comprueba que ambos nodos sean variable e iguales
+                        Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                        if(raiz.padre != null){
+                            if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                raiz.padre.izquierdo = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                                
+                            }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                raiz.padre.derecho = nodoRaiz;
+                                nodoRaiz.padre = raiz.padre;
+                            }
+                        }else{//el nodo es la raiz del arbol
+                            this.arbol.raiz = nodoRaiz;
+                            nodoRaiz.padre = null;
+                        }
+                    }
+
+
+                }else if(raiz.izquierdo.token.kind == NEGACION){
+                
+                    if(raiz.derecho.token.kind == NEGACION){
+
+                        if(raiz.izquierdo.derecho.token.image.equals(raiz.derecho.derecho.token.image)){//Comprueba que ambos nodos sean variable e iguales
+                            Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+    
+                            if(raiz.padre != null){
+                                if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                                    raiz.padre.izquierdo = nodoRaiz;
+                                    nodoRaiz.padre = raiz.padre;
+                                    
+                                }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                                    raiz.padre.derecho = nodoRaiz;
+                                    nodoRaiz.padre = raiz.padre;
+                                }
+                            }else{//el nodo es la raiz del arbol
+                                this.arbol.raiz = nodoRaiz;
+                                nodoRaiz.padre = null;
+                            }
+                        }
+                    }
+
+                }
+
+            }
+
+            
 
         }
     }
