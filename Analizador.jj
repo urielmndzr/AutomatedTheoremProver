@@ -168,6 +168,7 @@ public class Analizador{
             idempotencia(raiz);
             complementacion(raiz);
             identidad(raiz);
+            dominacion(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -1049,7 +1050,7 @@ public class Analizador{
                 }
 
             }else if(raiz.token.kind == DISYUNCION){
-                
+
                 if(raiz.izquierdo.token.kind == CONTRADICCION){
                     Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
 
@@ -1086,6 +1087,89 @@ public class Analizador{
 
                 }
             }
+        }
+
+        void dominacion(Nodo raiz){
+            this.arbol.enOrden();
+            System.out.println("entro");
+            if(raiz.token.kind == CONJUNCION){
+
+                if(raiz.izquierdo.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+
+            }else if(raiz.token.kind == DISYUNCION){
+
+                if(raiz.izquierdo.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+            }
+            System.out.println("fin");
+
         }
     }
 }

@@ -163,6 +163,7 @@ public class Analizador implements AnalizadorConstants {
             idempotencia(raiz);
             complementacion(raiz);
             identidad(raiz);
+            dominacion(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -1082,6 +1083,89 @@ public class Analizador implements AnalizadorConstants {
                 }
             }
         }
+
+        void dominacion(Nodo raiz){
+            this.arbol.enOrden();
+            System.out.println("entro");
+            if(raiz.token.kind == CONJUNCION){
+
+                if(raiz.izquierdo.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+
+            }else if(raiz.token.kind == DISYUNCION){
+
+                if(raiz.izquierdo.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+            }
+            System.out.println("fin");
+
+        }
     }
 
   final public void inicializarArbol() throws ParseException {
@@ -1349,6 +1433,11 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(15, xla); }
   }
 
+  private boolean jj_3_13() {
+    if (jj_3R_6()) return true;
+    return false;
+  }
+
   private boolean jj_3_8() {
     if (jj_3R_5()) return true;
     return false;
@@ -1490,11 +1579,6 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3R_7() {
     if (jj_3R_3()) return true;
-    return false;
-  }
-
-  private boolean jj_3_13() {
-    if (jj_3R_6()) return true;
     return false;
   }
 
