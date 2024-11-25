@@ -162,6 +162,7 @@ public class Analizador implements AnalizadorConstants {
             leyConmutativa(raiz);
             idempotencia(raiz);
             complementacion(raiz);
+            identidad(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -1002,6 +1003,85 @@ public class Analizador implements AnalizadorConstants {
 
 
         }
+
+        void identidad(Nodo raiz){
+            if(raiz.token.kind == CONJUNCION){
+
+                if(raiz.izquierdo.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+
+            }else if(raiz.token.kind == DISYUNCION){
+
+                if(raiz.izquierdo.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+            }
+        }
     }
 
   final public void inicializarArbol() throws ParseException {
@@ -1111,32 +1191,41 @@ public class Analizador implements AnalizadorConstants {
 
   final public Arbol procesarVariable() throws ParseException {
     Arbol arbol;
-    if (jj_2_9(2)) {
-      jj_consume_token(VARIABLE);
-                 arbol = new Arbol(new Nodo(token));
-    } else if (jj_2_10(2)) {
+    if (jj_2_12(2)) {
+      if (jj_2_9(2)) {
+        jj_consume_token(VARIABLE);
+      } else if (jj_2_10(2)) {
+        jj_consume_token(TAUTOLOGIA);
+      } else if (jj_2_11(2)) {
+        jj_consume_token(CONTRADICCION);
+      } else {
+        jj_consume_token(-1);
+        throw new ParseException();
+      }
+                                                arbol = new Arbol(new Nodo(token));
+    } else if (jj_2_13(2)) {
       arbol = procesarAgrupaciones();
     } else {
       jj_consume_token(-1);
       throw new ParseException();
     }
-                                                                                          {if (true) return arbol;}
+                                                                                                                         {if (true) return arbol;}
     throw new Error("Missing return statement in function");
   }
 
   final public Arbol procesarAgrupaciones() throws ParseException {
     Arbol arbol;
-    if (jj_2_11(2)) {
+    if (jj_2_14(2)) {
       jj_consume_token(PARENTESIS_IZQ);
       arbol = condicionales();
       jj_consume_token(PARENTESIS_DER);
                                                                  {if (true) return arbol;}
-    } else if (jj_2_12(2)) {
+    } else if (jj_2_15(2)) {
       jj_consume_token(CORCHETE_IZQ);
       arbol = condicionales();
       jj_consume_token(CORCHETE_DER);
                                                                {if (true) return arbol;}
-    } else if (jj_2_13(2)) {
+    } else if (jj_2_16(2)) {
       jj_consume_token(LLAVE_IZQ);
       arbol = condicionales();
       jj_consume_token(LLAVE_DER);
@@ -1239,6 +1328,37 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(12, xla); }
   }
 
+  private boolean jj_2_14(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_14(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(13, xla); }
+  }
+
+  private boolean jj_2_15(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_15(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(14, xla); }
+  }
+
+  private boolean jj_2_16(int xla) {
+    jj_la = xla; jj_lastpos = jj_scanpos = token;
+    try { return !jj_3_16(); }
+    catch(LookaheadSuccess ls) { return true; }
+    finally { jj_save(15, xla); }
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
+    return false;
+  }
+
+  private boolean jj_3_11() {
+    if (jj_scan_token(CONTRADICCION)) return true;
+    return false;
+  }
+
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
     if (jj_3R_4()) return true;
@@ -1252,6 +1372,11 @@ public class Analizador implements AnalizadorConstants {
     jj_scanpos = xsp;
     if (jj_3_8()) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3_10() {
+    if (jj_scan_token(TAUTOLOGIA)) return true;
     return false;
   }
 
@@ -1277,20 +1402,14 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
-  private boolean jj_3_13() {
+  private boolean jj_3_16() {
     if (jj_scan_token(LLAVE_IZQ)) return true;
     if (jj_3R_7()) return true;
     return false;
   }
 
-  private boolean jj_3_12() {
+  private boolean jj_3_15() {
     if (jj_scan_token(CORCHETE_IZQ)) return true;
-    if (jj_3R_7()) return true;
-    return false;
-  }
-
-  private boolean jj_3_11() {
-    if (jj_scan_token(PARENTESIS_IZQ)) return true;
     if (jj_3R_7()) return true;
     return false;
   }
@@ -1298,23 +1417,29 @@ public class Analizador implements AnalizadorConstants {
   private boolean jj_3R_6() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3_11()) {
+    if (jj_3_14()) {
     jj_scanpos = xsp;
-    if (jj_3_12()) {
+    if (jj_3_15()) {
     jj_scanpos = xsp;
-    if (jj_3_13()) return true;
+    if (jj_3_16()) return true;
     }
     }
     return false;
   }
 
-  private boolean jj_3_10() {
-    if (jj_3R_6()) return true;
+  private boolean jj_3_14() {
+    if (jj_scan_token(PARENTESIS_IZQ)) return true;
+    if (jj_3R_7()) return true;
     return false;
   }
 
   private boolean jj_3R_3() {
     if (jj_3R_4()) return true;
+    return false;
+  }
+
+  private boolean jj_3_9() {
+    if (jj_scan_token(VARIABLE)) return true;
     return false;
   }
 
@@ -1324,8 +1449,26 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
-  private boolean jj_3_9() {
-    if (jj_scan_token(VARIABLE)) return true;
+  private boolean jj_3_12() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_9()) {
+    jj_scanpos = xsp;
+    if (jj_3_10()) {
+    jj_scanpos = xsp;
+    if (jj_3_11()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_5() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_12()) {
+    jj_scanpos = xsp;
+    if (jj_3_13()) return true;
+    }
     return false;
   }
 
@@ -1345,23 +1488,13 @@ public class Analizador implements AnalizadorConstants {
     return false;
   }
 
-  private boolean jj_3R_5() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_9()) {
-    jj_scanpos = xsp;
-    if (jj_3_10()) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3R_7() {
     if (jj_3R_3()) return true;
     return false;
   }
 
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
+  private boolean jj_3_13() {
+    if (jj_3R_6()) return true;
     return false;
   }
 
@@ -1387,7 +1520,7 @@ public class Analizador implements AnalizadorConstants {
    private static void jj_la1_init_0() {
       jj_la1_0 = new int[] {};
    }
-  final private JJCalls[] jj_2_rtns = new JJCalls[13];
+  final private JJCalls[] jj_2_rtns = new JJCalls[16];
   private boolean jj_rescan = false;
   private int jj_gc = 0;
 
@@ -1615,7 +1748,7 @@ public class Analizador implements AnalizadorConstants {
 
   private void jj_rescan_token() {
     jj_rescan = true;
-    for (int i = 0; i < 13; i++) {
+    for (int i = 0; i < 16; i++) {
     try {
       JJCalls p = jj_2_rtns[i];
       do {
@@ -1635,6 +1768,9 @@ public class Analizador implements AnalizadorConstants {
             case 10: jj_3_11(); break;
             case 11: jj_3_12(); break;
             case 12: jj_3_13(); break;
+            case 13: jj_3_14(); break;
+            case 14: jj_3_15(); break;
+            case 15: jj_3_16(); break;
           }
         }
         p = p.next;

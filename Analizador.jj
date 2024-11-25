@@ -167,6 +167,7 @@ public class Analizador{
             leyConmutativa(raiz);
             idempotencia(raiz);
             complementacion(raiz);
+            identidad(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
@@ -1007,6 +1008,85 @@ public class Analizador{
 
 
         }
+
+        void identidad(Nodo raiz){
+            if(raiz.token.kind == CONJUNCION){
+
+                if(raiz.izquierdo.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == TAUTOLOGIA){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+
+            }else if(raiz.token.kind == DISYUNCION){
+                
+                if(raiz.izquierdo.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }else if(raiz.derecho.token.kind == CONTRADICCION){
+                    Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
+
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){//el nodo está a la izquierda del padre
+                            raiz.padre.izquierdo = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                            
+                        }else if(raiz.padre.derecho == raiz){//el nodo está a la derecha del padre
+                            raiz.padre.derecho = nodoRaiz;
+                            nodoRaiz.padre = raiz.padre;
+                        }
+                    }else{//el nodo es la raiz del arbol
+                        this.arbol.raiz = nodoRaiz;
+                        nodoRaiz.padre = null;
+                    }
+
+                }
+            }
+        }
     }
 }
 
@@ -1103,7 +1183,7 @@ Arbol procesarNegacion():{
 Arbol procesarVariable():{
     Arbol arbol;
 }{
-    (<VARIABLE>{ arbol = new Arbol(new Nodo(token)); } | arbol = procesarAgrupaciones()){ return arbol; }
+    ((<VARIABLE>|<TAUTOLOGIA>|<CONTRADICCION>){ arbol = new Arbol(new Nodo(token)); } | arbol = procesarAgrupaciones()){ return arbol; }
 }
 
 Arbol procesarAgrupaciones():{
