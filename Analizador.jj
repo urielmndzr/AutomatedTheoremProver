@@ -105,7 +105,11 @@ public class Analizador{
             detectaCambios = false;
             //System.out.println("Generar FNC");
             
-            aplicarCondicionales(this.arbol.raiz);
+            do{
+                detectaCambios = false;
+                aplicarCondicionales(this.arbol.raiz);
+            }while(detectaCambios);
+            
 
             do{
                 detectaCambios = false;

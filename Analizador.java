@@ -100,7 +100,11 @@ public class Analizador implements AnalizadorConstants {
             detectaCambios = false;
             //System.out.println("Generar FNC");
 
-            aplicarCondicionales(this.arbol.raiz);
+            do{
+                detectaCambios = false;
+                aplicarCondicionales(this.arbol.raiz);
+            }while(detectaCambios);
+
 
             do{
                 detectaCambios = false;
@@ -324,6 +328,7 @@ public class Analizador implements AnalizadorConstants {
             }
         }
 
+        /*
         void aplicarDistribucionDerecha(Nodo raiz){
             //Evaluacion por la derecha, variable sola a la izquierda
             Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
@@ -350,7 +355,7 @@ public class Analizador implements AnalizadorConstants {
 
             raiz.izquierdo.izquierdo = nodoIzqA;
             nodoIzqA.padre = raiz.izquierdo;
-            detectaCambios = true;
+            detectaCambios = true;            
         }
 
         void aplicarDistribucionIzquierda(Nodo raiz){
@@ -379,8 +384,8 @@ public class Analizador implements AnalizadorConstants {
 
             raiz.izquierdo.izquierdo = nodoIzqIzq;
             nodoIzqIzq.padre = raiz.izquierdo;
-            detectaCambios = true;
-        }
+            detectaCambios = true;    
+        }*/
 
         void leyDistributiva(Nodo raiz){
             if(raiz.token.kind == DISYUNCION){//Por la derecha "aplicarDistribucionDercha"
@@ -489,7 +494,6 @@ public class Analizador implements AnalizadorConstants {
                     nodoIzqIzq.padre = raiz.izquierdo;
                     detectaCambios = true;
                 }
-
 
             }
             //se comentó para mantener que no se cambie de FNC 
@@ -1645,27 +1649,6 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(15, xla); }
   }
 
-  private boolean jj_3R_4() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3_7()) {
-    jj_scanpos = xsp;
-    if (jj_3_8()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3_10() {
-    if (jj_scan_token(TAUTOLOGIA)) return true;
-    return false;
-  }
-
-  private boolean jj_3_6() {
-    if (jj_scan_token(DISYUNCION)) return true;
-    if (jj_3R_4()) return true;
-    return false;
-  }
-
   private boolean jj_3_5() {
     if (jj_scan_token(CONJUNCION)) return true;
     if (jj_3R_4()) return true;
@@ -1790,6 +1773,27 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3_7() {
     if (jj_scan_token(NEGACION)) return true;
+    if (jj_3R_4()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_4() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3_7()) {
+    jj_scanpos = xsp;
+    if (jj_3_8()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3_10() {
+    if (jj_scan_token(TAUTOLOGIA)) return true;
+    return false;
+  }
+
+  private boolean jj_3_6() {
+    if (jj_scan_token(DISYUNCION)) return true;
     if (jj_3R_4()) return true;
     return false;
   }
