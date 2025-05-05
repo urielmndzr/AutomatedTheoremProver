@@ -8,7 +8,7 @@ public class Analizador implements AnalizadorConstants {
             System.out.println("Iniciando an\u00e1lisis...\n");
             analizador.inicializarArbol();
 
-            System.out.println("An\u00e1lisis finalizado");
+            System.out.println("Fin del programa");
         }catch(ParseException e){
             System.out.println("Error de sintaxis: " + e.getMessage());
         }
@@ -38,24 +38,15 @@ public class Analizador implements AnalizadorConstants {
         }
 
         void enOrden(){
-            System.out.println("\nRecorrido in-orden: ");
+            //System.out.println("\nRecorrido in-orden: ");
             enOrdenRec(raiz);
-            System.out.println("\n");
+            //System.out.println("\n");
         }
 
         void enOrdenRec(Nodo raiz){
             if (raiz != null) {
-                //System.out.print(raiz.token.image + " ");
                 enOrdenRec(raiz.izquierdo);
-                //System.out.println("cambio");
                 System.out.print(raiz.token.image + " ");
-                /*if(raiz.padre!=null){
-                    System.out.println("Padre: "+raiz.padre.token.image + " ");
-                }else{
-                    System.out.println("Padre null");
-                }
-                
-                System.out.println("Raiz: "+raiz.token.image + " ");*/
                 enOrdenRec(raiz.derecho);
             }
         }
@@ -91,8 +82,7 @@ public class Analizador implements AnalizadorConstants {
             }
 
             Nodo nuevoNodo = new Nodo(new Token(raiz.token.kind,raiz.token.image));
-            //nuevoNodo.padre = raiz.padre;
-            //System.out.println("nvo nodo: "+nuevoNodo.token.image);
+
             nuevoNodo.izquierdo = obtenerSubArbol(raiz.izquierdo);
             if(nuevoNodo.izquierdo != null){
                 nuevoNodo.izquierdo.padre = nuevoNodo;
@@ -108,24 +98,101 @@ public class Analizador implements AnalizadorConstants {
 
         void generarFNC(){
             detectaCambios = false;
+            //System.out.println("Generar FNC");
 
-            System.out.println("Generar FNC");
+            aplicarCondicionales(this.arbol.raiz);
+
             do{
-                System.out.println("ITERACION");
                 detectaCambios = false;
-                aplicarConversion(this.arbol.raiz);
+                //aplicarConversion(this.arbol.raiz);
+                tratarNegaciones(this.arbol.raiz);
+            }while(detectaCambios);
+            System.out.println("se supone termino de tratar las negaciones");
+            this.arbol.enOrden();
+            System.out.println("-----------------------");
+
+            do{
+                detectaCambios = false;
+                aplicarLeyes(this.arbol.raiz);
+                System.out.println("Otro vuelta");
+                this.arbol.enOrden();
             }while(detectaCambios);
 
+            //System.out.println();
+        }
+
+
+        void aplicarCondicionales(Nodo raiz){
+            if(raiz != null){
+                aplicarCondicionales(raiz.izquierdo);
+
+                if(raiz.token.kind == BICONDICIONAL){
+                    sustituyeBicondicional(raiz);
+                }else if(raiz.token.kind == CONDICIONAL){
+                    sustituyeCondicional(raiz);
+                }
+
+                aplicarCondicionales(raiz.derecho);
+            }
+        }
+
+        void tratarNegaciones(Nodo raiz){
+            if(raiz!=null){
+                tratarNegaciones(raiz.izquierdo);
+                if(raiz.token.kind == NEGACION && raiz.derecho.token.kind == NEGACION){
+                    eliminarDobleNegacion(raiz);
+                }else if(raiz.token.kind == NEGACION && (raiz.derecho.token.kind == CONJUNCION || raiz.derecho.token.kind == DISYUNCION)){
+                    leyDeMorgan(raiz);
+                }
+                tratarNegaciones(raiz.derecho);
+            }
+        }
+
+        void aplicarLeyes(Nodo raiz){
             System.out.println();
+
+            System.out.println("aplicar leyes");
+            if(raiz!=null){
+                aplicarLeyes(raiz.izquierdo);
+                leyDistributiva(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                leyConmutativa(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                idempotencia(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                complementacion(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                identidad(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                dominacion(raiz);
+                System.out.println();
+                this.arbol.enOrden();
+                System.out.println();
+                aplicarLeyes(raiz.derecho);
+            }
         }
 
         void aplicarConversion(Nodo raiz){
             if (raiz != null) {
+
                 if(!detectaCambios){
+
                     aplicarConversion(raiz.izquierdo);
+
                     if(!detectaCambios){
                         aplicarSustituciones(raiz);
                     }
+
                     aplicarConversion(raiz.derecho);
                 }
             }
@@ -135,128 +202,215 @@ public class Analizador implements AnalizadorConstants {
 
             if(raiz.token.kind == BICONDICIONAL){
                 sustituyeBicondicional(raiz);
-                detectaCambios = true;
             }else if(raiz.token.kind == CONDICIONAL){
                 sustituyeCondicional(raiz);
-                detectaCambios = true;
-            }else if(raiz.token.kind == NEGACION){
-                if(raiz.derecho.token.kind == NEGACION){
-                    eliminarDobleNegacion(raiz);
-                    detectaCambios = true;
-                }else{
-                    detectaCambios = false;
-                }
+            }else if(raiz.token.kind == NEGACION && raiz.derecho.token.kind == NEGACION){
+                eliminarDobleNegacion(raiz);
+            }else if(raiz.token.kind == NEGACION && (raiz.derecho.token.kind == CONJUNCION || raiz.derecho.token.kind == DISYUNCION)){
+                leyDeMorgan(raiz);
             }else{
-                //detectaCambios = false;
+                leyDistributiva(raiz);
+                leyConmutativa(raiz);
             }
 
-            if(raiz.token.kind == NEGACION){
-                if(raiz.derecho.token.kind == CONJUNCION || raiz.derecho.token.kind == DISYUNCION){
-                    leyDeMorgan(raiz);
-                    detectaCambios = true;
-                }
-            }
-
-
-            leyDistributiva(raiz);
-            leyConmutativa(raiz);
-            idempotencia(raiz);
-            complementacion(raiz);
-            identidad(raiz);
-            dominacion(raiz);
+            //idempotencia(raiz);
+            //complementacion(raiz);
+            //identidad(raiz);
+            //dominacion(raiz);
         }
 
         void sustituyeBicondicional(Nodo raiz){
-            Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
-            nodoIzqA.padre = raiz.izquierdo;
-            Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
-            nodoDerA.padre = raiz.izquierdo;
+            if(raiz.token.kind == BICONDICIONAL){
+                Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
+                nodoIzqA.padre = raiz.izquierdo;
+                Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
+                nodoDerA.padre = raiz.izquierdo;
 
-            Nodo nodoIzqB = obtenerSubArbol(raiz.izquierdo);
-            nodoIzqB.padre = raiz.derecho;
-            Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
-            nodoDerB.padre = raiz.derecho;
+                Nodo nodoIzqB = obtenerSubArbol(raiz.izquierdo);
+                nodoIzqB.padre = raiz.derecho;
+                Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
+                nodoDerB.padre = raiz.derecho;
 
-            raiz.token = new Token(CONJUNCION, "&");
-            raiz.izquierdo.token = new Token(CONDICIONAL, ">");
-            raiz.izquierdo.izquierdo = nodoIzqA;
-            raiz.izquierdo.derecho = nodoDerA;
+                raiz.token = new Token(CONJUNCION, "&");
+                raiz.izquierdo.token = new Token(CONDICIONAL, ">");
+                raiz.izquierdo.izquierdo = nodoIzqA;
+                raiz.izquierdo.derecho = nodoDerA;
 
-            raiz.derecho.token = new Token(CONDICIONAL, ">");
-            raiz.derecho.izquierdo = nodoDerB;
-            raiz.derecho.derecho = nodoIzqB;
+                raiz.derecho.token = new Token(CONDICIONAL, ">");
+                raiz.derecho.izquierdo = nodoDerB;
+                raiz.derecho.derecho = nodoIzqB;
+
+                detectaCambios = true;
+            }
         }
 
         void sustituyeCondicional(Nodo raiz){
-            Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
-            nodoIzq.padre = raiz.izquierdo;
+            if(raiz.token.kind == CONDICIONAL){
+                Nodo nodoIzq = obtenerSubArbol(raiz.izquierdo);
+                nodoIzq.padre = raiz.izquierdo;
 
-            Nodo nodoDer = obtenerSubArbol(raiz.derecho);
-            nodoDer.padre = raiz;
+                Nodo nodoDer = obtenerSubArbol(raiz.derecho);
+                nodoDer.padre = raiz;
 
-            raiz.token = new Token(DISYUNCION, "|");
+                raiz.token = new Token(DISYUNCION, "|");
 
-            raiz.izquierdo.token = new Token(NEGACION, "\u00ac");
-            raiz.izquierdo.derecho = nodoIzq;
-            raiz.izquierdo.izquierdo = null;
+                raiz.izquierdo.token = new Token(NEGACION, "\u00ac");
+                raiz.izquierdo.derecho = nodoIzq;
+                raiz.izquierdo.izquierdo = null;
 
-            raiz.derecho = nodoDer;
+                raiz.derecho = nodoDer;
+
+                detectaCambios = true;
+            }
         }
 
         void eliminarDobleNegacion(Nodo raiz){
-            if(raiz.padre != null){
-                if(raiz.padre.izquierdo == raiz){
-                    raiz.padre.izquierdo = raiz.derecho.derecho;
-                    raiz.derecho.derecho.padre = raiz.padre;
-                }else if(raiz.padre.derecho == raiz){
-                    raiz.padre.derecho = raiz.derecho.derecho;
-                    raiz.derecho.derecho.padre = raiz.padre;
+            if(raiz.token.kind == NEGACION){
+                if(raiz.derecho.token.kind == NEGACION){
+                    if(raiz.padre != null){
+                        if(raiz.padre.izquierdo == raiz){
+                            raiz.padre.izquierdo = raiz.derecho.derecho;
+                            raiz.derecho.derecho.padre = raiz.padre;
+                        }else if(raiz.padre.derecho == raiz){
+                            raiz.padre.derecho = raiz.derecho.derecho;
+                            raiz.derecho.derecho.padre = raiz.padre;
+                        }
+                    }else{//Negación en la raiz del arbol
+                        this.arbol.raiz = raiz.derecho.derecho;
+                        this.arbol.raiz.padre = null;
+                    }
+                    detectaCambios = true;
                 }
-            }else{//En el caso que haya una negación en la raiz del arbol
-                this.arbol.raiz = raiz.derecho.derecho;
-                this.arbol.raiz.padre = null;
             }
         }
 
         void leyDeMorgan(Nodo raiz){
-            if(raiz.derecho.token.kind == CONJUNCION){
-                Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
-                Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
+            if(raiz.token.kind == NEGACION){
+                if(raiz.derecho.token.kind == CONJUNCION){
+                    Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
+                    Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
 
-                raiz.token = new Token(DISYUNCION, "|");
+                    raiz.token = new Token(DISYUNCION, "|");
 
-                raiz.derecho = new Nodo(new Token(NEGACION,"\u00ac"));
-                raiz.derecho.derecho = nodoDer;
-                raiz.derecho.padre = raiz;
-                nodoDer.padre = raiz.derecho;
+                    raiz.derecho = new Nodo(new Token(NEGACION,"\u00ac"));
+                    raiz.derecho.derecho = nodoDer;
+                    raiz.derecho.padre = raiz;
+                    nodoDer.padre = raiz.derecho;
 
-                raiz.izquierdo = new Nodo(new Token(NEGACION,"\u00ac"));
-                raiz.izquierdo.derecho = nodoIzq;
-                raiz.izquierdo.padre = raiz;
-                nodoIzq.padre = raiz.izquierdo;
+                    raiz.izquierdo = new Nodo(new Token(NEGACION,"\u00ac"));
+                    raiz.izquierdo.derecho = nodoIzq;
+                    raiz.izquierdo.padre = raiz;
+                    nodoIzq.padre = raiz.izquierdo;
 
-            }else if(raiz.derecho.token.kind == DISYUNCION){
-                Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
-                Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
+                    detectaCambios = true;
+                }else if(raiz.derecho.token.kind == DISYUNCION){
+                    Nodo nodoIzq = obtenerSubArbol(raiz.derecho.izquierdo);
+                    Nodo nodoDer = obtenerSubArbol(raiz.derecho.derecho);
 
-                raiz.token = new Token(CONJUNCION, "&");
+                    raiz.token = new Token(CONJUNCION, "&");
 
-                raiz.derecho = new Nodo(new Token(NEGACION,"\u00ac"));
-                raiz.derecho.derecho = nodoDer;
-                raiz.derecho.padre = raiz;
-                nodoDer.padre = raiz.derecho;
+                    raiz.derecho = new Nodo(new Token(NEGACION,"\u00ac"));
+                    raiz.derecho.derecho = nodoDer;
+                    raiz.derecho.padre = raiz;
+                    nodoDer.padre = raiz.derecho;
 
-                raiz.izquierdo = new Nodo(new Token(NEGACION,"\u00ac"));
-                raiz.izquierdo.derecho = nodoIzq;
-                raiz.izquierdo.padre = raiz;
-                nodoIzq.padre = raiz.izquierdo;
+                    raiz.izquierdo = new Nodo(new Token(NEGACION,"\u00ac"));
+                    raiz.izquierdo.derecho = nodoIzq;
+                    raiz.izquierdo.padre = raiz;
+                    nodoIzq.padre = raiz.izquierdo;
+
+                    detectaCambios = true;
+                }
             }
         }
 
+        void aplicarDistribucionDerecha(Nodo raiz){
+            //Evaluacion por la derecha, variable sola a la izquierda
+            Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
+            Nodo nodoIzqB = obtenerSubArbol(raiz.izquierdo);
+
+            Nodo nodoDerDer = obtenerSubArbol(raiz.derecho.derecho);
+            Nodo nodoDerIzq = obtenerSubArbol(raiz.derecho.izquierdo);
+
+            raiz.token = new Token(CONJUNCION, "&");
+
+            raiz.derecho = new Nodo(new Token(DISYUNCION,"|"));
+            raiz.derecho.padre = raiz;
+            raiz.derecho.derecho = nodoDerDer;
+            nodoDerDer.padre = raiz.derecho;
+
+            raiz.derecho.izquierdo = nodoIzqB;
+            nodoIzqB.padre = raiz.derecho;
+
+
+            raiz.izquierdo = new Nodo(new Token(DISYUNCION,"|"));
+            raiz.izquierdo.padre = raiz;
+            raiz.izquierdo.derecho = nodoDerIzq;
+            nodoDerIzq.padre = raiz.izquierdo;
+
+            raiz.izquierdo.izquierdo = nodoIzqA;
+            nodoIzqA.padre = raiz.izquierdo;
+            detectaCambios = true;
+        }
+
+        void aplicarDistribucionIzquierda(Nodo raiz){
+            //Evaluacion por la izquierda, variable sola a la derecha
+            Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
+            Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
+
+            Nodo nodoIzqDer = obtenerSubArbol(raiz.izquierdo.derecho);
+            Nodo nodoIzqIzq = obtenerSubArbol(raiz.izquierdo.izquierdo);
+
+            raiz.token = new Token(CONJUNCION, "&");
+
+            raiz.derecho = new Nodo(new Token(DISYUNCION,"|"));
+            raiz.derecho.padre = raiz;
+            raiz.derecho.derecho = nodoDerB;
+            nodoDerB.padre = raiz.derecho;
+
+            raiz.derecho.izquierdo = nodoIzqDer;
+            nodoIzqDer.padre = raiz.derecho;
+
+
+            raiz.izquierdo = new Nodo(new Token(DISYUNCION,"|"));
+            raiz.izquierdo.padre = raiz;
+            raiz.izquierdo.derecho = nodoDerA;
+            nodoDerA.padre = raiz.izquierdo;
+
+            raiz.izquierdo.izquierdo = nodoIzqIzq;
+            nodoIzqIzq.padre = raiz.izquierdo;
+            detectaCambios = true;
+        }
+
         void leyDistributiva(Nodo raiz){
-            if(raiz.token.kind == DISYUNCION){//Por la derecha
+            if(raiz.token.kind == DISYUNCION){//Por la derecha "aplicarDistribucionDercha"
                 if(raiz.derecho.token.kind == CONJUNCION && (raiz.izquierdo.token.kind == VARIABLE || raiz.izquierdo.token.kind == NEGACION)){
+
                     //Evaluación por la derecha (variable sola a la izquierda)
+
+                    /*if(raiz.izquierdo.token.kind == VARIABLE){
+                        if(!(raiz.derecho.izquierdo.token.image.equals(raiz.izquierdo.token.image) || raiz.derecho.derecho.token.image.equals(raiz.izquierdo.token.image))){
+                            // SE NIEGA PARA EVITAR EL ERROR ||System.out.println("va a haber un error NO HACER");
+                            aplicarDistribucionDerecha(raiz);
+                        }
+                    }else if(raiz.izquierdo.token.kind == NEGACION){ //de lado izquierdo hay una negacion
+                        if(raiz.derecho.izquierdo.token.kind == NEGACION){
+                            if(!(raiz.derecho.izquierdo.derecho.token.image.equals(raiz.izquierdo.derecho.token.image))){
+                                //System.out.println("otro error por negacion NO HACER");
+                                //SE NIEGA PARA EVITAR EL ERROR
+                                aplicarDistribucionDerecha(raiz);
+                            }
+                        }else if(raiz.derecho.derecho.token.kind == NEGACION){
+                            if(!(raiz.derecho.derecho.derecho.token.image.equals(raiz.izquierdo.derecho.token.image))){
+                                //System.out.println("otro error por negacion pt 2 NO HACER");
+                                //SE NIEGA PARA EVITAR EL ERROR
+                                aplicarDistribucionDerecha(raiz);
+                            }
+                        }else{
+                            aplicarDistribucionDerecha(raiz);
+                        }
+                    }*/
+
                     Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
                     Nodo nodoIzqB = obtenerSubArbol(raiz.izquierdo);
 
@@ -284,6 +438,31 @@ public class Analizador implements AnalizadorConstants {
                     detectaCambios = true;
                 }else if(raiz.izquierdo.token.kind == CONJUNCION && (raiz.derecho.token.kind == VARIABLE || raiz.derecho.token.kind == NEGACION)){
                     //Evaluación por la izquierda (variable sola a la derecha)
+                    /*
+                    if(raiz.derecho.token.kind == VARIABLE){
+                        if(!(raiz.izquierdo.izquierdo.token.image.equals(raiz.derecho.token.image) || raiz.izquierdo.derecho.token.image.equals(raiz.derecho.token.image))){
+                            // SE NIEGA PARA EVITAR EL ERROR ||System.out.println("va a haber un error NO HACER");
+                            aplicarDistribucionIzquierda(raiz);
+                        }
+                    }else if(raiz.derecho.token.kind == NEGACION){ //de lado derecho hay una negacion
+                        if(raiz.izquierdo.izquierdo.token.kind == NEGACION){
+                            if(!(raiz.izquierdo.izquierdo.derecho.token.image.equals(raiz.derecho.derecho.token.image))){
+                                //System.out.println("otro error por negacion NO HACER");
+                                //SE NIEGA PARA EVITAR EL ERROR
+                                aplicarDistribucionIzquierda(raiz);
+                            }
+                        }else if(raiz.izquierdo.derecho.token.kind == NEGACION){
+                            if(!(raiz.izquierdo.derecho.derecho.token.image.equals(raiz.derecho.derecho.token.image))){
+                                //System.out.println("otro error por negacion pt 2 NO HACER");
+                                //SE NIEGA PARA EVITAR EL ERROR
+                                aplicarDistribucionIzquierda(raiz);
+                            }
+                        }else{
+                            aplicarDistribucionIzquierda(raiz);
+                        }
+                    }
+                    */
+
                     Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
                     Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
 
@@ -311,7 +490,11 @@ public class Analizador implements AnalizadorConstants {
                     detectaCambios = true;
                 }
 
-            }else if(raiz.token.kind == CONJUNCION){//Por la derecha
+
+            }
+            //se comentó para mantener que no se cambie de FNC 
+            /*
+            else if(raiz.token.kind == CONJUNCION){//Por la derecha
                 if(raiz.derecho.token.kind == DISYUNCION && (raiz.izquierdo.token.kind == VARIABLE || raiz.izquierdo.token.kind == NEGACION)){
                     //Evaluación por la derecha (variable sola a la izquierda)
                     Nodo nodoIzqA = obtenerSubArbol(raiz.izquierdo);
@@ -341,6 +524,7 @@ public class Analizador implements AnalizadorConstants {
                     detectaCambios = true;
                 }else if(raiz.izquierdo.token.kind == DISYUNCION && (raiz.derecho.token.kind == VARIABLE || raiz.derecho.token.kind == NEGACION)){
                     //Evaluación por la izquierda (variable sola a la derecha)
+                    //System.out.println("okay2");
                     Nodo nodoDerA = obtenerSubArbol(raiz.derecho);
                     Nodo nodoDerB = obtenerSubArbol(raiz.derecho);
 
@@ -366,8 +550,8 @@ public class Analizador implements AnalizadorConstants {
                     raiz.izquierdo.izquierdo = nodoIzqIzq;
                     nodoIzqIzq.padre = raiz.izquierdo;
                     detectaCambios = true;
-                }
-            }
+                }  
+            }*/
         }
 
 
@@ -882,8 +1066,9 @@ public class Analizador implements AnalizadorConstants {
                             this.arbol.raiz = nodoRaiz;
                             nodoRaiz.padre = null;
                         }
+                        detectaCambios = true;
+                        System.out.println("Idem");
                     }
-
 
                 }else if(raiz.izquierdo.token.kind == NEGACION){
 
@@ -905,6 +1090,8 @@ public class Analizador implements AnalizadorConstants {
                                 this.arbol.raiz = nodoRaiz;
                                 nodoRaiz.padre = null;
                             }
+                            detectaCambios = true;
+                            System.out.println("Idem");
                         }
                     }
 
@@ -935,6 +1122,8 @@ public class Analizador implements AnalizadorConstants {
                             this.arbol.raiz = nodoRaiz;
                             nodoRaiz.padre = null;
                         }
+                        detectaCambios = true;
+                        System.out.println("complementacion a tauto");
                     }
 
                 }else if(raiz.izquierdo.token.kind == NEGACION && raiz.derecho.token.kind == VARIABLE){
@@ -955,6 +1144,8 @@ public class Analizador implements AnalizadorConstants {
                             this.arbol.raiz = nodoRaiz;
                             nodoRaiz.padre = null;
                         }
+                        detectaCambios = true;
+                        System.out.println("complementacion a tauto");
                     }
                 }
 
@@ -978,6 +1169,8 @@ public class Analizador implements AnalizadorConstants {
                             this.arbol.raiz = nodoRaiz;
                             nodoRaiz.padre = null;
                         }
+                        detectaCambios = true;
+                        System.out.println("complementacion a contra");
                     }
 
                 }else if(raiz.izquierdo.token.kind == NEGACION && raiz.derecho.token.kind == VARIABLE){
@@ -998,6 +1191,8 @@ public class Analizador implements AnalizadorConstants {
                             this.arbol.raiz = nodoRaiz;
                             nodoRaiz.padre = null;
                         }
+                        detectaCambios = true;
+                        System.out.println("complementacion a contra");
                     }
                 }
             }
@@ -1024,6 +1219,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
+                    detectaCambios = true;
+                    System.out.println("identidad tauto");
 
                 }else if(raiz.derecho.token.kind == TAUTOLOGIA){
                     Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
@@ -1041,7 +1238,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
-
+                    detectaCambios = true;
+                    System.out.println("identidad tauto");
                 }
 
             }else if(raiz.token.kind == DISYUNCION){
@@ -1062,7 +1260,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
-
+                    detectaCambios = true;
+                    System.out.println("identidad contra");
                 }else if(raiz.derecho.token.kind == CONTRADICCION){
                     Nodo nodoRaiz = obtenerSubArbol(raiz.izquierdo);
 
@@ -1079,14 +1278,15 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
-
+                    detectaCambios = true;
+                    System.out.println("identidad contra");
                 }
             }
         }
 
         void dominacion(Nodo raiz){
-            this.arbol.enOrden();
-            System.out.println("entro");
+            //this.arbol.enOrden();
+            //System.out.println("entro");
             if(raiz.token.kind == CONJUNCION){
 
                 if(raiz.izquierdo.token.kind == CONTRADICCION){
@@ -1105,6 +1305,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
+                    detectaCambios = true;
+                    System.out.println("dominacion contra");
 
                 }else if(raiz.derecho.token.kind == CONTRADICCION){
                     Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
@@ -1122,7 +1324,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
-
+                    detectaCambios = true;
+                    System.out.println("dominacion contra");
                 }
 
             }else if(raiz.token.kind == DISYUNCION){
@@ -1143,6 +1346,8 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
+                    detectaCambios = true;
+                    System.out.println("dominacion tauto");
 
                 }else if(raiz.derecho.token.kind == TAUTOLOGIA){
                     Nodo nodoRaiz = obtenerSubArbol(raiz.derecho);
@@ -1160,10 +1365,11 @@ public class Analizador implements AnalizadorConstants {
                         this.arbol.raiz = nodoRaiz;
                         nodoRaiz.padre = null;
                     }
-
+                    detectaCambios = true;
+                    System.out.println("dominacion tauto");
                 }
             }
-            System.out.println("fin");
+            //System.out.println("fin");
 
         }
     }
@@ -1172,7 +1378,13 @@ public class Analizador implements AnalizadorConstants {
     Arbol arbol;
     ConversionFNC conversion;
     arbol = condicionales();
-                            System.out.println("Fin"); arbol.enOrden(); conversion = new ConversionFNC(arbol); conversion.generarFNC(); arbol.enOrden();
+        System.out.println("\nRecorrido del \u00e1rbol: ");
+        arbol.enOrden();
+        conversion = new ConversionFNC(arbol);
+        conversion.generarFNC();
+        System.out.println("\n\nForma Normal Conjuntiva (FNC): ");
+        arbol.enOrden();
+        System.out.println("\n");
   }
 
   final public Arbol condicionales() throws ParseException {
@@ -1433,27 +1645,6 @@ public class Analizador implements AnalizadorConstants {
     finally { jj_save(15, xla); }
   }
 
-  private boolean jj_3_13() {
-    if (jj_3R_6()) return true;
-    return false;
-  }
-
-  private boolean jj_3_8() {
-    if (jj_3R_5()) return true;
-    return false;
-  }
-
-  private boolean jj_3_11() {
-    if (jj_scan_token(CONTRADICCION)) return true;
-    return false;
-  }
-
-  private boolean jj_3_7() {
-    if (jj_scan_token(NEGACION)) return true;
-    if (jj_3R_4()) return true;
-    return false;
-  }
-
   private boolean jj_3R_4() {
     Token xsp;
     xsp = jj_scanpos;
@@ -1579,6 +1770,27 @@ public class Analizador implements AnalizadorConstants {
 
   private boolean jj_3R_7() {
     if (jj_3R_3()) return true;
+    return false;
+  }
+
+  private boolean jj_3_13() {
+    if (jj_3R_6()) return true;
+    return false;
+  }
+
+  private boolean jj_3_8() {
+    if (jj_3R_5()) return true;
+    return false;
+  }
+
+  private boolean jj_3_11() {
+    if (jj_scan_token(CONTRADICCION)) return true;
+    return false;
+  }
+
+  private boolean jj_3_7() {
+    if (jj_scan_token(NEGACION)) return true;
+    if (jj_3R_4()) return true;
     return false;
   }
 
